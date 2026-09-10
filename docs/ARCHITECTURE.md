@@ -79,7 +79,7 @@ Berisi tipe TypeScript bersama untuk domain aplikasi, payload form, response ser
 
 Berisi konfigurasi aplikasi yang dapat berubah antar sekolah atau antar environment. Nilai rahasia tetap harus menggunakan environment variables.
 
-Konfigurasi Supabase public berada di `src/config/supabase.ts` dan membaca `NEXT_PUBLIC_SUPABASE_URL` serta `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+Konfigurasi Supabase public berada di `src/config/supabase.ts` dan membaca `NEXT_PUBLIC_SUPABASE_URL` serta `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 
 ### `src/utils`
 

@@ -5,10 +5,10 @@ import { getSupabasePublicConfig } from "../../config/supabase";
 import type { Database } from "../../types/database";
 
 export async function createSupabaseServerClient() {
-  const { url, anonKey } = getSupabasePublicConfig();
+  const { url, publishableKey } = getSupabasePublicConfig();
   const cookieStore = await cookies();
 
-  return createServerClient<Database>(url, anonKey, {
+  return createServerClient<Database>(url, publishableKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
