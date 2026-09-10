@@ -42,6 +42,15 @@ Template ini akan dikembangkan dengan Next.js App Router, TypeScript, Tailwind C
 - Siapkan client/server utility Supabase.
 - Dokumentasikan aturan akses data awal.
 
+Output fondasi fase kedua:
+
+- Dependensi `@supabase/supabase-js` dan `@supabase/ssr`.
+- `.env.example` untuk konfigurasi Supabase public.
+- Helper Supabase browser dan server.
+- Migration SQL awal di `supabase/migrations`.
+- Tipe database awal di `src/types/database.ts`.
+- Dokumentasi rancangan database di `docs/DATABASE_DESIGN.md`.
+
 ### Fase 3: Admin dan Manajemen Data
 
 - Bangun area admin untuk konfigurasi sekolah dan pemilihan.

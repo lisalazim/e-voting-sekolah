@@ -24,6 +24,8 @@ src/
   lib/
   types/
   utils/
+supabase/
+  migrations/
 ```
 
 ## Tanggung Jawab Direktori
@@ -64,6 +66,11 @@ Berisi modul rekap hasil, agregasi suara, dan tampilan hasil pemilihan sesuai at
 
 Berisi integrasi library dan service bersama, misalnya client Supabase pada fase berikutnya. Pada fase pertama, Supabase belum dipasang.
 
+Pada fase kedua, folder ini mulai berisi helper Supabase:
+
+- `src/lib/supabase/browser.ts` untuk client browser.
+- `src/lib/supabase/server.ts` untuk client server di App Router.
+
 ### `src/types`
 
 Berisi tipe TypeScript bersama untuk domain aplikasi, payload form, response service, dan kontrak data.
@@ -72,9 +79,23 @@ Berisi tipe TypeScript bersama untuk domain aplikasi, payload form, response ser
 
 Berisi konfigurasi aplikasi yang dapat berubah antar sekolah atau antar environment. Nilai rahasia tetap harus menggunakan environment variables.
 
+Konfigurasi Supabase public berada di `src/config/supabase.ts` dan membaca `NEXT_PUBLIC_SUPABASE_URL` serta `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+
 ### `src/utils`
 
 Berisi helper murni yang tidak bergantung pada framework atau domain tertentu, seperti formatter tanggal, parser, dan utility validasi umum.
+
+### `supabase/migrations`
+
+Berisi migration SQL untuk schema database Supabase. Migration awal mendefinisikan tabel sekolah, profil pengguna internal, pemilihan, kandidat, pemilih, suara anonim, audit log, enum, index, trigger `updated_at`, dan RLS baseline.
+
+## Fondasi Supabase Fase Kedua
+
+- Dependensi Supabase memakai `@supabase/supabase-js` dan `@supabase/ssr`.
+- Environment contoh tersedia di `.env.example`.
+- Tipe database awal tersedia di `src/types/database.ts`.
+- Keputusan schema dan aturan akses awal dijelaskan di `docs/DATABASE_DESIGN.md`.
+- Service role key belum ditambahkan karena belum ada kebutuhan server-only setup pada fase ini.
 
 ## Batasan Fase Pertama
 
