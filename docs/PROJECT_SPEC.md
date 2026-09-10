@@ -57,6 +57,15 @@ Output fondasi fase kedua:
 - Bangun manajemen kandidat dan pemilih.
 - Tambahkan validasi form dan state kosong.
 
+Fondasi awal fase ketiga:
+
+- Halaman login admin di `/admin/login`.
+- Login memakai email dan password Supabase Auth.
+- Tidak ada pendaftaran akun publik.
+- Logout admin melalui Server Action.
+- Proteksi `/admin` berdasarkan user Supabase Auth dan role `admin` pada tabel `profiles`.
+- Kerangka dashboard admin tanpa CRUD sekolah, pemilihan, kandidat, pemilih, impor Excel, voting, grafik hasil, atau animasi pengumuman.
+
 ### Fase 4: Voting
 
 - Bangun alur autentikasi pemilih.

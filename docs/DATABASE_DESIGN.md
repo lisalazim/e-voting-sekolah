@@ -106,16 +106,18 @@ Kebijakan awal:
 
 ## Catatan Bootstrap
 
-Pembuatan sekolah pertama dan admin pertama tidak diselesaikan di fase ini. Opsi untuk fase berikutnya:
+Pembuatan sekolah pertama dan admin pertama tidak diselesaikan oleh UI aplikasi. Opsi bootstrap:
 
 - Jalankan SQL seed manual di Supabase SQL Editor.
 - Buat server-only setup action memakai service role key yang tidak pernah dikirim ke browser.
 - Buat proses onboarding admin yang dibatasi environment/deployment tertentu.
 
+Untuk login admin fase ketiga, akun harus sudah ada di Supabase Auth dan memiliki baris `profiles` dengan `role = 'admin'`.
+
 ## Hal yang Belum Dibuat
 
 - Tidak ada RPC `cast_vote`.
-- Tidak ada UI dashboard admin.
+- Tidak ada CRUD dashboard admin.
 - Tidak ada form manajemen kandidat atau pemilih.
 - Tidak ada alur login pemilih.
 - Tidak ada impor Excel.

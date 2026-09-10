@@ -70,6 +70,7 @@ Pada fase kedua, folder ini mulai berisi helper Supabase:
 
 - `src/lib/supabase/browser.ts` untuk client browser.
 - `src/lib/supabase/server.ts` untuk client server di App Router.
+- `src/lib/supabase/proxy.ts` untuk refresh session cookie melalui Next.js Proxy.
 
 ### `src/types`
 
@@ -85,6 +86,25 @@ Konfigurasi Supabase public berada di `src/config/supabase.ts` dan membaca `NEXT
 
 Berisi helper murni yang tidak bergantung pada framework atau domain tertentu, seperti formatter tanggal, parser, dan utility validasi umum.
 
+### `src/features/admin/auth`
+
+Berisi fondasi autentikasi admin:
+
+- Server Actions untuk login dan logout.
+- Query untuk membaca user Supabase Auth dan memastikan role `admin` pada tabel `profiles`.
+- Komponen form login admin.
+
+### `src/proxy.ts`
+
+Berisi Next.js Proxy untuk menjaga session cookie Supabase tetap sinkron pada request aplikasi. Proxy tidak menggantikan pemeriksaan otorisasi di layout atau Server Actions.
+
+### `src/app/admin`
+
+Berisi route admin:
+
+- `/admin/login` untuk login admin.
+- `/admin` untuk kerangka dashboard admin yang diproteksi role `admin`.
+
 ### `supabase/migrations`
 
 Berisi migration SQL untuk schema database Supabase. Migration awal mendefinisikan tabel sekolah, profil pengguna internal, pemilihan, kandidat, pemilih, suara anonim, audit log, enum, index, trigger `updated_at`, dan RLS baseline.
@@ -96,6 +116,14 @@ Berisi migration SQL untuk schema database Supabase. Migration awal mendefinisik
 - Tipe database awal tersedia di `src/types/database.ts`.
 - Keputusan schema dan aturan akses awal dijelaskan di `docs/DATABASE_DESIGN.md`.
 - Service role key belum ditambahkan karena belum ada kebutuhan server-only setup pada fase ini.
+
+## Fondasi Admin Fase Ketiga
+
+- Login admin memakai Supabase Auth email/password.
+- Tidak ada pendaftaran akun publik.
+- Akses dashboard memerlukan session valid dan `profiles.role = 'admin'`.
+- Logout dilakukan melalui Server Action.
+- Kerangka dashboard belum berisi CRUD, voting, impor Excel, grafik hasil, atau animasi pengumuman.
 
 ## Batasan Fase Pertama
 
