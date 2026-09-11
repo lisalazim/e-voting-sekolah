@@ -65,6 +65,18 @@ Aturan:
 - `ballot_number` harus positif.
 - Nomor urut unik per pemilihan.
 - Kandidat terikat ke `elections`.
+- `photo_url` menyimpan URL publik foto kandidat dari Supabase Storage.
+
+### Storage `candidate-photos`
+
+Bucket `candidate-photos` menyimpan foto kandidat.
+
+Aturan:
+- Bucket bersifat public read karena foto kandidat akan tampil pada halaman voting.
+- File dibatasi ke JPG, PNG, atau WebP.
+- Ukuran file maksimal 2 MB.
+- Path file dibuat dengan pola `school_id/candidate_id/nama-file`.
+- Upload, update, dan delete hanya boleh dilakukan admin sekolah yang cocok dengan folder `school_id`.
 
 ### `voters`
 
@@ -72,13 +84,32 @@ Menyimpan daftar pemilih sah untuk satu pemilihan.
 
 Kolom penting:
 - `external_id`: nomor induk atau identifier sekolah.
-- `token_hash`: hash dari token/kode akses pemilih.
+- `full_name`: nama pemilih.
+- `class_name`: kelas pemilih.
+- `gender`: `L` atau `P`.
+- `token_hash`: hash dari token/kode akses pemilih. Pada fase daftar pemilih kolom ini dibuat nullable karena token belum dibuat.
 - `has_voted` dan `voted_at`: status penggunaan hak suara.
 - `token_revoked_at`: menandai token yang dibatalkan.
 
 Catatan operasional:
 - Token mentah hanya boleh muncul saat dibuat atau dicetak.
 - Jika token hilang, panitia sebaiknya membuat ulang token dan membatalkan token lama.
+- Token dibuat dari 10 karakter acak kriptografis dengan alfabet huruf kapital dan angka yang mudah dibaca tanpa karakter ambigu seperti `O`, `0`, `I`, dan `1`.
+- Token disimpan hanya sebagai HMAC-SHA-256 pada `token_hash`.
+- Secret HMAC dibaca dari environment server-only `VOTER_TOKEN_PEPPER`; nilai ini harus secret acak yang kuat dan tidak boleh dikirim ke browser.
+- Input token harus dinormalisasi dengan menghapus spasi/tanda hubung dan mengubah huruf menjadi kapital sebelum hashing.
+- Token asli hanya tersedia satu kali saat dibuat atau diregenerasi. Setelah halaman ditutup atau dimuat ulang, aplikasi tidak dapat menampilkan token asli kembali.
+- CSV token berisi `nis,nama,kelas,token` dan harus disimpan, dicetak, serta dibagikan secara terbatas oleh panitia.
+- File token tidak boleh diunggah ke tempat publik, dikirim ke grup terbuka, atau dicatat dalam audit log.
+
+Format impor pemilih:
+- File didukung: `.xlsx` dan `.csv`.
+- Header wajib: `nis,nama,kelas,jenis_kelamin`.
+- `nis`, `nama`, `kelas`, dan `jenis_kelamin` wajib diisi.
+- `nis` diperlakukan sebagai teks.
+- `jenis_kelamin` hanya menerima `L` atau `P`.
+- Maksimal 1.500 baris per file.
+- Sistem mendeteksi NIS duplikat dalam file dan NIS yang sudah ada pada pemilihan yang sama.
 
 ### `votes`
 
@@ -119,8 +150,6 @@ Untuk login admin fase ketiga, akun harus sudah ada di Supabase Auth dan memilik
 
 - Tidak ada RPC `cast_vote`.
 - Tidak ada CRUD kandidat atau pemilih.
-- Tidak ada form manajemen kandidat atau pemilih.
 - Tidak ada alur login pemilih.
-- Tidak ada impor Excel.
 - Tidak ada grafik hasil.
 - Tidak ada animasi pengumuman.

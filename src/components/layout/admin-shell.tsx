@@ -59,12 +59,18 @@ export function AdminShell({ adminName, children }: AdminShellProps) {
             >
               Pemilihan
             </Link>
-            <span className="block rounded-md px-3 py-2 text-sm text-slate-500">
+            <Link
+              className="block rounded-md px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              href="/admin/kandidat"
+            >
               Kandidat
-            </span>
-            <span className="block rounded-md px-3 py-2 text-sm text-slate-500">
+            </Link>
+            <Link
+              className="block rounded-md px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              href="/admin/pemilih"
+            >
               Pemilih
-            </span>
+            </Link>
           </nav>
         </aside>
 

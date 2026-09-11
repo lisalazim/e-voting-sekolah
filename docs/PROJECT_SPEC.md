@@ -85,3 +85,29 @@ Fondasi pengaturan sebelum fitur voting:
 - Bangun rekap hasil.
 - Tambahkan pengaturan visibilitas hasil.
 - Siapkan deployment Vercel dan dokumentasi penggunaan template untuk sekolah baru.
+
+Fondasi pengelolaan kandidat sebelum fitur pemilih dan voting:
+
+- Halaman `/admin/kandidat` untuk menampilkan, menambah, mengedit, dan menghapus calon Ketua OSIS.
+- Form kandidat memuat nomor urut, nama lengkap, kelas, foto, visi, misi, dan status aktif.
+- Foto kandidat disimpan di Supabase Storage bucket `candidate-photos`.
+- Belum membuat pemilih, impor Excel, token, voting, hasil, atau mode pengumuman.
+
+### Fase 6: Daftar Pemilih
+
+- Halaman `/admin/pemilih` untuk melihat, mencari, memfilter, menambah, mengedit, dan menghapus pemilih.
+- Kolom pemilih: NIS, nama, kelas, jenis kelamin, dan status memilih.
+- Impor daftar pemilih dari `.xlsx` dan `.csv`.
+- Template impor memakai header `nis,nama,kelas,jenis_kelamin`.
+- Preview impor wajib dilakukan sebelum konfirmasi simpan.
+- Belum membuat token pemilih, proses voting, hasil, atau mode pengumuman.
+
+### Fase 7: Token Pemilih
+
+- Admin dapat membuat token untuk seluruh pemilih yang belum memiliki token.
+- Admin dapat meregenerasi token satu pemilih yang belum memberikan suara.
+- Token asli hanya ditampilkan satu kali setelah dibuat atau diregenerasi.
+- Database hanya menyimpan `token_hash`, bukan token asli.
+- Hash token memakai HMAC-SHA-256 dengan secret server-only `VOTER_TOKEN_PEPPER`.
+- Token tidak boleh dibuat setelah pemilihan dibuka atau jadwal mulai tercapai.
+- Belum membuat login pemilih, proses voting, hasil, atau mode pengumuman.

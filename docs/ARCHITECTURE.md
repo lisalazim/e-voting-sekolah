@@ -106,6 +106,8 @@ Berisi route admin:
 - `/admin` untuk kerangka dashboard admin yang diproteksi role `admin`.
 - `/admin/pengaturan` untuk pengaturan identitas sekolah dan nama admin.
 - `/admin/pemilihan` untuk pengaturan kegiatan pemilihan.
+- `/admin/kandidat` untuk pengelolaan calon Ketua OSIS.
+- `/admin/pemilih` untuk pengelolaan dan impor daftar pemilih.
 
 ### `supabase/migrations`
 
@@ -135,6 +137,34 @@ Berisi migration SQL untuk schema database Supabase. Migration awal mendefinisik
 - Validasi formulir memakai Zod.
 - Semua Server Actions memeriksa session dan role `admin`, lalu membatasi operasi ke `profiles.school_id`.
 - Periode kepengurusan disimpan di `elections.term_label` melalui migration baru.
+
+## Pengelolaan Kandidat Fase Kelima
+
+- Pengelolaan kandidat admin berada di `src/features/admin/candidates`.
+- Foto kandidat disimpan di Supabase Storage bucket `candidate-photos`.
+- Path foto dibuat server-side dengan pola `school_id/candidate_id/nama-file`.
+- Server Actions kandidat selalu memeriksa session, role `admin`, dan pemilihan milik sekolah admin.
+- Belum ada fitur pemilih, impor Excel, token, voting, hasil, atau mode pengumuman.
+
+## Pengelolaan Pemilih Fase Keenam
+
+- Pengelolaan daftar pemilih admin berada di `src/features/admin/voters`.
+- Impor `.xlsx` memakai ExcelJS dan `.csv` memakai Papa Parse.
+- Preview impor tidak menyimpan data; data baru disimpan setelah konfirmasi impor.
+- Server Actions pemilih selalu memeriksa session, role `admin`, dan pemilihan milik sekolah admin.
+- `school_id` dan `election_id` tidak diambil dari browser sebagai sumber kebenaran.
+- Belum ada token pemilih, voting, hasil, atau mode pengumuman.
+
+## Pengelolaan Token Fase Ketujuh
+
+- Utility token berada di `src/features/admin/voters/token-utils.ts`.
+- Server Actions token berada di `src/features/admin/voters/token-actions.ts`.
+- State hasil token satu-kali berada di `src/features/admin/voters/token-state.ts` agar file `"use server"` hanya mengekspor fungsi async.
+- Token dibuat dengan generator acak kriptografis dan diformat agar mudah dibaca.
+- Token dinormalisasi sebelum hashing dengan menghapus spasi/tanda hubung dan mengubah huruf menjadi kapital.
+- Database hanya menerima hasil HMAC-SHA-256 dari token menggunakan `VOTER_TOKEN_PEPPER`.
+- UI admin tidak menampilkan `token_hash`.
+- Hasil token asli batch dapat diunduh sebagai CSV satu kali dari state browser setelah aksi berhasil.
 
 ## Batasan Fase Pertama
 

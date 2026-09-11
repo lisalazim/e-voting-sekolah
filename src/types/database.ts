@@ -204,8 +204,9 @@ export type Database = {
           election_id: string;
           external_id: string;
           full_name: string;
+          gender: string | null;
           class_name: string | null;
-          token_hash: string;
+          token_hash: string | null;
           token_issued_at: string | null;
           token_revoked_at: string | null;
           has_voted: boolean;
@@ -218,8 +219,9 @@ export type Database = {
           election_id: string;
           external_id: string;
           full_name: string;
+          gender?: string | null;
           class_name?: string | null;
-          token_hash: string;
+          token_hash?: string | null;
           token_issued_at?: string | null;
           token_revoked_at?: string | null;
           has_voted?: boolean;
@@ -232,8 +234,9 @@ export type Database = {
           election_id?: string;
           external_id?: string;
           full_name?: string;
+          gender?: string | null;
           class_name?: string | null;
-          token_hash?: string;
+          token_hash?: string | null;
           token_issued_at?: string | null;
           token_revoked_at?: string | null;
           has_voted?: boolean;
@@ -281,6 +284,8 @@ export type Database = {
         | "candidate.updated"
         | "voter.created"
         | "voter.updated"
+        | "voter_tokens.generated"
+        | "voter_token.regenerated"
         | "vote.cast"
         | "results.published";
       election_status: "draft" | "scheduled" | "open" | "closed" | "archived";
