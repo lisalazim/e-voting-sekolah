@@ -40,6 +40,7 @@ export type Database = {
           metadata?: Json;
           created_at?: string;
         };
+        Relationships: [];
       };
       candidates: {
         Row: {
@@ -81,6 +82,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       elections: {
         Row: {
@@ -88,6 +90,7 @@ export type Database = {
           school_id: string;
           title: string;
           description: string | null;
+          term_label: string | null;
           starts_at: string;
           ends_at: string;
           status: Database["public"]["Enums"]["election_status"];
@@ -103,6 +106,7 @@ export type Database = {
           school_id: string;
           title: string;
           description?: string | null;
+          term_label?: string | null;
           starts_at: string;
           ends_at: string;
           status?: Database["public"]["Enums"]["election_status"];
@@ -118,6 +122,7 @@ export type Database = {
           school_id?: string;
           title?: string;
           description?: string | null;
+          term_label?: string | null;
           starts_at?: string;
           ends_at?: string;
           status?: Database["public"]["Enums"]["election_status"];
@@ -128,6 +133,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       profiles: {
         Row: {
@@ -154,6 +160,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       schools: {
         Row: {
@@ -189,6 +196,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       voters: {
         Row: {
@@ -233,6 +241,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       votes: {
         Row: {
@@ -256,6 +265,7 @@ export type Database = {
           ballot_fingerprint?: string;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;

@@ -73,6 +73,13 @@ Fondasi awal fase ketiga:
 - Pastikan satu pemilih hanya dapat memberikan satu suara.
 - Tambahkan state jadwal pemilihan seperti belum mulai, berlangsung, dan selesai.
 
+Fondasi pengaturan sebelum fitur voting:
+
+- Halaman `/admin/pengaturan` untuk nama sekolah, slug sekolah, zona waktu, dan nama admin/pengelola.
+- Halaman `/admin/pemilihan` untuk nama kegiatan, periode kepengurusan, jadwal mulai, jadwal selesai, dan izin tampilan hasil setelah diumumkan.
+- Dashboard `/admin` menampilkan ringkasan sekolah dan kegiatan pemilihan.
+- Belum membuat kandidat, pemilih, impor Excel, voting, penghitungan, atau pengumuman hasil.
+
 ### Fase 5: Hasil dan Publikasi
 
 - Bangun rekap hasil.

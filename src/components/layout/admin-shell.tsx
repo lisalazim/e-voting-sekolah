@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 
 import { logoutAdmin } from "../../features/admin/auth/actions";
 
@@ -40,18 +41,24 @@ export function AdminShell({ adminName, children }: AdminShellProps) {
       <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-6 sm:px-6 md:grid-cols-[220px_1fr] lg:px-8">
         <aside className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
           <nav aria-label="Navigasi admin" className="space-y-1">
-            <a
+            <Link
               className="block rounded-md bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800"
               href="/admin"
             >
               Ringkasan
-            </a>
-            <span className="block rounded-md px-3 py-2 text-sm text-slate-500">
-              Sekolah
-            </span>
-            <span className="block rounded-md px-3 py-2 text-sm text-slate-500">
+            </Link>
+            <Link
+              className="block rounded-md px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              href="/admin/pengaturan"
+            >
+              Pengaturan
+            </Link>
+            <Link
+              className="block rounded-md px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              href="/admin/pemilihan"
+            >
               Pemilihan
-            </span>
+            </Link>
             <span className="block rounded-md px-3 py-2 text-sm text-slate-500">
               Kandidat
             </span>

@@ -104,6 +104,8 @@ Berisi route admin:
 
 - `/admin/login` untuk login admin.
 - `/admin` untuk kerangka dashboard admin yang diproteksi role `admin`.
+- `/admin/pengaturan` untuk pengaturan identitas sekolah dan nama admin.
+- `/admin/pemilihan` untuk pengaturan kegiatan pemilihan.
 
 ### `supabase/migrations`
 
@@ -124,6 +126,15 @@ Berisi migration SQL untuk schema database Supabase. Migration awal mendefinisik
 - Akses dashboard memerlukan session valid dan `profiles.role = 'admin'`.
 - Logout dilakukan melalui Server Action.
 - Kerangka dashboard belum berisi CRUD, voting, impor Excel, grafik hasil, atau animasi pengumuman.
+
+## Pengaturan Admin Fase Keempat
+
+- Pengaturan sekolah berada di `src/features/admin/settings`.
+- Pengaturan pemilihan berada di `src/features/admin/elections`.
+- Ringkasan dashboard mengambil data melalui `src/features/admin/dashboard`.
+- Validasi formulir memakai Zod.
+- Semua Server Actions memeriksa session dan role `admin`, lalu membatasi operasi ke `profiles.school_id`.
+- Periode kepengurusan disimpan di `elections.term_label` melalui migration baru.
 
 ## Batasan Fase Pertama
 

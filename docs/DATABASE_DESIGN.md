@@ -53,6 +53,7 @@ Status:
 
 Kolom penting:
 - `starts_at` dan `ends_at` untuk jadwal.
+- `term_label` untuk periode kepengurusan.
 - `results_visibility` untuk aturan publikasi hasil.
 - `published_at` dan `finalized_at` untuk fase hasil.
 
@@ -117,7 +118,7 @@ Untuk login admin fase ketiga, akun harus sudah ada di Supabase Auth dan memilik
 ## Hal yang Belum Dibuat
 
 - Tidak ada RPC `cast_vote`.
-- Tidak ada CRUD dashboard admin.
+- Tidak ada CRUD kandidat atau pemilih.
 - Tidak ada form manajemen kandidat atau pemilih.
 - Tidak ada alur login pemilih.
 - Tidak ada impor Excel.
