@@ -280,6 +280,7 @@ export type Database = {
         | "school.updated"
         | "election.created"
         | "election.updated"
+        | "election.status_changed"
         | "candidate.created"
         | "candidate.updated"
         | "voter.created"
@@ -289,7 +290,13 @@ export type Database = {
         | "voter_tokens.regenerated"
         | "vote.cast"
         | "results.published";
-      election_status: "draft" | "scheduled" | "open" | "closed" | "archived";
+      election_status:
+        | "draft"
+        | "scheduled"
+        | "open"
+        | "paused"
+        | "closed"
+        | "archived";
       results_visibility: "private" | "committee" | "public";
     };
     CompositeTypes: Record<string, never>;

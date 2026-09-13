@@ -108,6 +108,7 @@ Berisi route admin:
 - `/admin/pemilihan` untuk pengaturan kegiatan pemilihan.
 - `/admin/kandidat` untuk pengelolaan calon Ketua OSIS.
 - `/admin/pemilih` untuk pengelolaan dan impor daftar pemilih.
+- `/admin/kotak-suara` untuk kontrol status kotak suara.
 
 ### `supabase/migrations`
 
@@ -168,6 +169,18 @@ Berisi migration SQL untuk schema database Supabase. Migration awal mendefinisik
 - Database hanya menerima hasil HMAC-SHA-256 dari token menggunakan `VOTER_TOKEN_PEPPER`.
 - UI admin tidak menampilkan `token_hash`.
 - Hasil token asli batch dapat diunduh sebagai CSV `nama,kelas,token` satu kali dari state browser setelah aksi berhasil.
+
+## Kontrol Kotak Suara Fase Kedelapan
+
+- Kontrol kotak suara berada di `src/features/admin/ballot-box`.
+- Helper status efektif berada di `src/features/admin/ballot-box/status.ts`.
+- Query ringkasan kotak suara berada di `src/features/admin/ballot-box/queries.ts`.
+- Server Action transisi status berada di `src/features/admin/ballot-box/actions.ts`.
+- Lifecycle UI mengikuti `draft -> scheduled -> open -> paused -> open -> closed`.
+- Status `closed` tidak dapat dibuka kembali melalui UI.
+- Server Action selalu membaca status database terkini, memverifikasi admin dan sekolah, lalu memakai conditional update agar permintaan bersamaan tidak menghasilkan transisi yang salah.
+- Status efektif dihitung server-side agar status database `open` tetap dianggap tidak menerima suara setelah `ends_at` terlewati.
+- Fase ini belum membuat login pemilih, penerimaan suara, hasil kandidat, atau pengumuman.
 
 ## Batasan Fase Pertama
 

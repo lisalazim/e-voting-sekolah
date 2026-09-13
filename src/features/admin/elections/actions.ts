@@ -84,7 +84,6 @@ export async function saveElectionSettings(
     ends_at: endsAt,
     results_visibility: parsed.data.resultsVisibility,
     starts_at: startsAt,
-    status: "scheduled" as const,
     term_label: parsed.data.termLabel,
     title: parsed.data.title,
   };

@@ -113,3 +113,12 @@ Fondasi pengelolaan kandidat sebelum fitur pemilih dan voting:
 - Hash token memakai HMAC-SHA-256 dengan secret server-only `VOTER_TOKEN_PEPPER`.
 - Token tidak boleh dibuat setelah pemilihan dibuka atau jadwal mulai tercapai.
 - Belum membuat login pemilih, proses voting, hasil, atau mode pengumuman.
+
+### Fase 8: Kontrol Kotak Suara
+
+- Halaman `/admin/kotak-suara` mengontrol lifecycle kotak suara.
+- Alur status pemilihan: `draft -> scheduled -> open -> paused -> open -> closed`.
+- Status `closed` bersifat terminal dan tidak dapat dibuka kembali melalui UI.
+- Kotak suara hanya dapat dibuka jika jadwal valid, waktu selesai belum terlewati, minimal dua kandidat aktif, terdapat pemilih, dan seluruh pemilih memiliki token.
+- Status efektif dihitung di server; jika jadwal selesai sudah terlewati, kotak suara dianggap tidak menerima suara walaupun status database masih `open`.
+- Fase ini belum membuat login pemilih, penyimpanan suara, penghitungan hasil, atau pengumuman.

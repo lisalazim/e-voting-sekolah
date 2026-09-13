@@ -3,7 +3,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getAdminDashboardData } from "../../../features/admin/dashboard/queries";
-import type { AdminElection } from "../../../features/admin/dashboard/queries";
+import {
+  getEffectiveElectionStatus,
+  getElectionStatusLabel,
+} from "../../../features/admin/ballot-box/status";
 import { createSupabaseServerClient } from "../../../lib/supabase/server";
 import { formatDateTimeForZone } from "../../../utils/date-time";
 
@@ -11,30 +14,6 @@ export const metadata: Metadata = {
   title: "Dashboard Admin | E-Voting Sekolah",
   description: "Ringkasan pengaturan E-Voting Sekolah.",
 };
-
-function getElectionStatus(election: AdminElection): string {
-  const now = Date.now();
-  const startsAt = new Date(election.starts_at).getTime();
-  const endsAt = new Date(election.ends_at).getTime();
-
-  if (election.status === "archived") {
-    return "Diarsipkan";
-  }
-
-  if (election.status === "closed" || now > endsAt) {
-    return "Selesai";
-  }
-
-  if (now >= startsAt && now <= endsAt) {
-    return "Sedang berlangsung";
-  }
-
-  if (election.status === "draft") {
-    return "Draf";
-  }
-
-  return "Terjadwal";
-}
 
 export default async function AdminDashboardPage() {
   const supabase = await createSupabaseServerClient();
@@ -81,7 +60,9 @@ export default async function AdminDashboardPage() {
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm font-medium text-slate-500">Status pemilihan</p>
           <h3 className="mt-2 text-xl font-semibold text-slate-950">
-            {data.election ? getElectionStatus(data.election) : "Belum dibuat"}
+            {data.election
+              ? getElectionStatusLabel(getEffectiveElectionStatus(data.election))
+              : "Belum dibuat"}
           </h3>
           <p className="mt-2 text-sm text-slate-600">
             Hasil:{" "}
@@ -91,9 +72,9 @@ export default async function AdminDashboardPage() {
           </p>
           <Link
             className="mt-4 inline-flex min-h-10 items-center rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-            href="/admin/pemilihan"
+            href="/admin/kotak-suara"
           >
-            Atur pemilihan
+            Kontrol kotak suara
           </Link>
         </div>
       </div>

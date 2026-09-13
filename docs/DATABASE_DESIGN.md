@@ -48,6 +48,7 @@ Status:
 - `draft`
 - `scheduled`
 - `open`
+- `paused`
 - `closed`
 - `archived`
 
@@ -56,6 +57,17 @@ Kolom penting:
 - `term_label` untuk periode kepengurusan.
 - `results_visibility` untuk aturan publikasi hasil.
 - `published_at` dan `finalized_at` untuk fase hasil.
+
+Lifecycle kotak suara:
+- `draft`: pemilihan masih dipersiapkan.
+- `scheduled`: pemilihan siap tetapi kotak suara belum dibuka.
+- `open`: kotak suara dibuka selama jadwal masih berlaku.
+- `paused`: kotak suara dijeda sementara.
+- `closed`: pemilihan selesai dan tidak dapat dibuka kembali melalui UI.
+
+Status efektif dihitung oleh aplikasi server-side. Jika `ends_at` sudah
+terlewati, kotak suara dianggap tidak menerima suara walaupun status database
+masih `open`.
 
 ### `candidates`
 
@@ -125,6 +137,10 @@ Aturan:
 ### `audit_logs`
 
 Menyimpan jejak aksi penting seperti perubahan data sekolah, pemilihan, kandidat, pemilih, suara, dan publikasi hasil.
+
+Perubahan status kotak suara dicatat dengan action `election.status_changed`
+dan metadata status lama, status baru, serta transisi yang dijalankan. Metadata
+tidak menyimpan token pemilih atau data rahasia.
 
 ## RLS Awal
 
