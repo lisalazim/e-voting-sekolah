@@ -97,6 +97,7 @@ export type Database = {
           results_visibility: Database["public"]["Enums"]["results_visibility"];
           published_at: string | null;
           finalized_at: string | null;
+          finalized_by: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -113,6 +114,7 @@ export type Database = {
           results_visibility?: Database["public"]["Enums"]["results_visibility"];
           published_at?: string | null;
           finalized_at?: string | null;
+          finalized_by?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -129,6 +131,7 @@ export type Database = {
           results_visibility?: Database["public"]["Enums"]["results_visibility"];
           published_at?: string | null;
           finalized_at?: string | null;
+          finalized_by?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -356,7 +359,9 @@ export type Database = {
         | "voter_token.regenerated"
         | "voter_tokens.regenerated"
         | "vote.cast"
-        | "results.published";
+        | "results.finalized"
+        | "results.published"
+        | "results.unpublished";
       election_status:
         | "draft"
         | "scheduled"

@@ -135,3 +135,13 @@ Fondasi pengelolaan kandidat sebelum fitur pemilih dan voting:
 - Tabel `votes` tetap anonim dan tidak menyimpan voter, session, token, nama, kelas, atau external id.
 - Halaman `/pilih/selesai` tidak menampilkan kandidat yang dipilih.
 - Fase ini belum membuat grafik hasil, publikasi hasil, atau pengumuman.
+
+### Fase 10: Penghitungan dan Finalisasi Hasil
+
+- Halaman `/admin/hasil` menampilkan partisipasi agregat untuk admin sekolah.
+- Sebelum status pemilihan `closed`, perolehan kandidat disembunyikan.
+- Setelah `closed`, admin dapat melihat perolehan suara kandidat dari agregasi tabel `votes`.
+- Sistem menentukan suara tertinggi server-side dan menangani hasil seri tanpa memilih pemenang tunggal otomatis.
+- Finalisasi menyimpan `finalized_at` dan `finalized_by`, serta tidak menghitung ulang isi `votes`.
+- Setelah finalisasi, kandidat dan konfigurasi penting pemilihan tidak dapat diedit melalui UI.
+- Status siap diumumkan disimpan melalui `published_at`, tetapi fase ini belum membuat halaman publik hasil, countdown, atau animasi pengumuman.

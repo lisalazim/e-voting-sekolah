@@ -57,6 +57,7 @@ Kolom penting:
 - `term_label` untuk periode kepengurusan.
 - `results_visibility` untuk aturan publikasi hasil.
 - `published_at` dan `finalized_at` untuk fase hasil.
+- `finalized_by` untuk admin yang melakukan finalisasi hasil.
 
 Lifecycle kotak suara:
 - `draft`: pemilihan masih dipersiapkan.
@@ -184,6 +185,17 @@ tidak menyimpan token pemilih atau data rahasia.
 Penerimaan suara dapat dicatat sebagai agregat `vote.cast` pada entity election
 tanpa menyimpan voter dan candidate dalam entri audit yang sama.
 
+Finalisasi dan kontrol publikasi hasil:
+- `results.finalized` dicatat saat hasil difinalisasi.
+- `results.published` dicatat saat hasil ditandai siap diumumkan.
+- `results.unpublished` dicatat saat status siap diumumkan dibatalkan.
+- Audit tidak mencatat identitas pemilih atau pasangan pemilih-kandidat.
+
+Penghitungan hasil:
+- Sumber hasil adalah agregasi langsung tabel `votes`.
+- Sebelum status election `closed`, perolehan kandidat tidak ditampilkan.
+- Setelah finalisasi, isi `votes` tidak dihitung ulang ke tabel snapshot pada fase ini.
+
 ## RLS Awal
 
 Row Level Security diaktifkan untuk semua tabel public.
@@ -210,4 +222,6 @@ Untuk login admin fase ketiga, akun harus sudah ada di Supabase Auth dan memilik
 
 - Tidak ada CRUD kandidat atau pemilih.
 - Tidak ada grafik hasil.
+- Tidak ada halaman hasil publik.
+- Tidak ada countdown pengumuman.
 - Tidak ada animasi pengumuman.

@@ -65,16 +65,13 @@ export default async function AdminDashboardPage() {
               : "Belum dibuat"}
           </h3>
           <p className="mt-2 text-sm text-slate-600">
-            Hasil:{" "}
-            {data.election?.results_visibility === "public"
-              ? "boleh ditampilkan setelah diumumkan"
-              : "tidak ditampilkan publik"}
+            Finalisasi: {data.election?.finalized_at ? "sudah final" : "belum final"}
           </p>
           <Link
             className="mt-4 inline-flex min-h-10 items-center rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-            href="/admin/kotak-suara"
+            href="/admin/hasil"
           >
-            Kontrol kotak suara
+            Lihat hasil
           </Link>
         </div>
       </div>

@@ -137,6 +137,13 @@ export async function saveCandidate(
     };
   }
 
+  if (dashboardData.election.finalized_at) {
+    return {
+      status: "error",
+      message: "Hasil sudah difinalisasi. Data kandidat tidak dapat diubah.",
+    };
+  }
+
   const candidateId = parsed.data.candidateId || crypto.randomUUID();
   const existingCandidate = parsed.data.candidateId
     ? await findExistingCandidate(
@@ -266,6 +273,13 @@ export async function deleteCandidate(
     return {
       status: "error",
       message: "Pemilihan belum tersedia.",
+    };
+  }
+
+  if (dashboardData.election.finalized_at) {
+    return {
+      status: "error",
+      message: "Hasil sudah difinalisasi. Data kandidat tidak dapat dihapus.",
     };
   }
 

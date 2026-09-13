@@ -89,6 +89,23 @@ export async function saveElectionSettings(
   };
 
   const electionId = parsed.data.electionId;
+  if (electionId) {
+    const { data: existingElection } = await supabase
+      .from("elections")
+      .select("id, finalized_at")
+      .eq("id", electionId)
+      .eq("school_id", admin.profile.school_id)
+      .maybeSingle();
+
+    if (existingElection?.finalized_at) {
+      return {
+        status: "error",
+        message:
+          "Hasil sudah difinalisasi. Pengaturan penting pemilihan tidak dapat diubah.",
+      };
+    }
+  }
+
   const result = electionId
     ? await supabase
         .from("elections")

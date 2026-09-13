@@ -109,6 +109,7 @@ Berisi route admin:
 - `/admin/kandidat` untuk pengelolaan calon Ketua OSIS.
 - `/admin/pemilih` untuk pengelolaan dan impor daftar pemilih.
 - `/admin/kotak-suara` untuk kontrol status kotak suara.
+- `/admin/hasil` untuk penghitungan, finalisasi, dan status siap diumumkan.
 
 ### `supabase/migrations`
 
@@ -193,6 +194,18 @@ Berisi migration SQL untuk schema database Supabase. Migration awal mendefinisik
 - Boundary kepercayaan ada di server dan database: browser hanya mengirim token saat login dan `candidate_id` saat submit, sedangkan election, voter, session, dan status efektif ditentukan ulang oleh server/RPC.
 - RPC `cast_vote` menjalankan validasi sesi, locking sesi dan voter, validasi election, validasi kandidat, insert suara anonim, update `has_voted`, dan penandaan sesi terpakai dalam satu transaksi database.
 - Fase ini tidak membuat hasil, grafik, atau pengumuman.
+
+## Hasil Admin Fase Kesepuluh
+
+- Penghitungan hasil admin berada di `src/features/admin/results`.
+- Query hasil selalu berangkat dari `getAdminDashboardData`, sehingga election dibatasi ke `profiles.school_id` admin.
+- Sebelum status database `closed`, halaman hanya menampilkan partisipasi agregat.
+- Setelah `closed`, perolehan kandidat dihitung dari agregasi tabel `votes` tanpa join ke `voters` atau `voter_sessions`.
+- Finalisasi dan publikasi memakai Server Actions dengan conditional update.
+- Finalisasi menyimpan `finalized_at` dan `finalized_by`.
+- Status siap diumumkan memakai `published_at`; pembatalan siap diumumkan mengosongkan `published_at`.
+- Setelah finalisasi, Server Actions kandidat dan pengaturan pemilihan menolak perubahan.
+- Fase ini tidak membuat countdown, animasi, atau halaman hasil publik.
 
 ## Batasan Fase Pertama
 

@@ -32,7 +32,7 @@ export async function getAdminDashboardData(
   const { data: electionData } = await supabase
     .from("elections")
     .select(
-      "id, school_id, title, description, term_label, starts_at, ends_at, status, results_visibility, published_at, finalized_at, created_by, created_at, updated_at",
+      "id, school_id, title, description, term_label, starts_at, ends_at, status, results_visibility, published_at, finalized_at, finalized_by, created_by, created_at, updated_at",
     )
     .eq("school_id", admin.profile.school_id)
     .order("created_at", { ascending: false })
