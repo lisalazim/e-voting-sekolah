@@ -56,7 +56,7 @@ Berisi modul terkait daftar pemilih, status pemilih, impor data pemilih, dan val
 
 ### `src/features/voting`
 
-Berisi modul alur pemberian suara. Direktori ini disiapkan untuk fase berikutnya dan belum berisi implementasi voting pada fase fondasi.
+Berisi modul alur pemberian suara publik, termasuk login token pemilih, cookie sesi pemilih sementara, query kandidat melalui RPC, dan Server Action submit suara.
 
 ### `src/features/results`
 
@@ -181,6 +181,18 @@ Berisi migration SQL untuk schema database Supabase. Migration awal mendefinisik
 - Server Action selalu membaca status database terkini, memverifikasi admin dan sekolah, lalu memakai conditional update agar permintaan bersamaan tidak menghasilkan transisi yang salah.
 - Status efektif dihitung server-side agar status database `open` tetap dianggap tidak menerima suara setelah `ends_at` terlewati.
 - Fase ini belum membuat login pemilih, penerimaan suara, hasil kandidat, atau pengumuman.
+
+## Voting Publik Fase Kesembilan
+
+- Route publik voting berada di `src/app/pilih`.
+- Server Actions voting berada di `src/features/voting/actions.ts`.
+- Cookie sesi pemilih dikelola di `src/features/voting/session.ts`.
+- Kandidat aktif dibaca melalui RPC `get_voting_context`, bukan query client langsung ke tabel admin.
+- Token mentah hanya diterima oleh Server Action login, lalu langsung dinormalisasi dan di-hash. Token mentah tidak masuk URL, localStorage, sessionStorage, audit log, atau database.
+- Cookie pemilih hanya menyimpan secret sesi acak HttpOnly. Cookie tidak berisi `voter_id`, `token_hash`, token mentah, atau pilihan kandidat.
+- Boundary kepercayaan ada di server dan database: browser hanya mengirim token saat login dan `candidate_id` saat submit, sedangkan election, voter, session, dan status efektif ditentukan ulang oleh server/RPC.
+- RPC `cast_vote` menjalankan validasi sesi, locking sesi dan voter, validasi election, validasi kandidat, insert suara anonim, update `has_voted`, dan penandaan sesi terpakai dalam satu transaksi database.
+- Fase ini tidak membuat hasil, grafik, atau pengumuman.
 
 ## Batasan Fase Pertama
 

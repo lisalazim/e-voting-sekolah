@@ -246,6 +246,36 @@ export type Database = {
         };
         Relationships: [];
       };
+      voter_sessions: {
+        Row: {
+          id: string;
+          election_id: string;
+          voter_id: string;
+          session_hash: string;
+          expires_at: string;
+          used_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          election_id: string;
+          voter_id: string;
+          session_hash: string;
+          expires_at: string;
+          used_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          election_id?: string;
+          voter_id?: string;
+          session_hash?: string;
+          expires_at?: string;
+          used_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       votes: {
         Row: {
           id: string;
@@ -272,7 +302,44 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      cast_vote: {
+        Args: {
+          p_candidate_id: string;
+          p_session_hash: string;
+        };
+        Returns: {
+          status: string;
+        }[];
+      };
+      create_voter_session: {
+        Args: {
+          p_expires_at: string;
+          p_session_hash: string;
+          p_token_hash: string;
+        };
+        Returns: {
+          status: string;
+        }[];
+      };
+      get_voting_context: {
+        Args: {
+          p_session_hash: string;
+        };
+        Returns: {
+          ballot_number: number | null;
+          candidate_class_name: string | null;
+          candidate_id: string | null;
+          candidate_mission: string | null;
+          candidate_name: string | null;
+          candidate_photo_url: string | null;
+          candidate_vision: string | null;
+          election_term_label: string | null;
+          election_title: string | null;
+          status: string;
+        }[];
+      };
+    };
     Enums: {
       app_role: "admin" | "committee" | "observer";
       audit_action:

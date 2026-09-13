@@ -131,8 +131,47 @@ Menyimpan suara yang sudah masuk.
 
 Aturan:
 - Tidak menyimpan `voter_id`.
+- Tidak menyimpan `voter_session_id`, `token_hash`, nama, kelas, atau `external_id`.
 - `candidate_id` wajib berasal dari `election_id` yang sama.
 - `ballot_fingerprint` unik per pemilihan untuk membantu pencegahan submit ganda tanpa membuka identitas pemilih.
+
+### `voter_sessions`
+
+Menyimpan sesi pemilih sementara setelah token valid.
+
+Aturan:
+- `session_hash` adalah hash dari secret sesi acak; secret asli hanya berada pada cookie HttpOnly pemilih.
+- Cookie sesi berlaku 15 menit, SameSite=Strict, dan Secure pada production.
+- Sesi terkait dengan `voter_id` dan `election_id` di database, tetapi nilai tersebut tidak dikirim ke cookie yang dapat dibaca JavaScript.
+- `used_at` diisi setelah suara berhasil dicatat.
+- RLS diaktifkan dan tidak ada policy akses langsung client ke tabel ini.
+
+### RPC Voting
+
+RPC `create_voter_session`:
+- menerima `token_hash` yang dihitung server-side dari token mentah;
+- memastikan token cocok dengan pemilih yang belum memilih;
+- memastikan election efektif `open` dan berada dalam jadwal;
+- membuat sesi pemilih dengan `session_hash` dan expiry.
+
+RPC `get_voting_context`:
+- memvalidasi sesi belum kedaluwarsa dan belum digunakan;
+- memastikan kotak suara efektif `open`;
+- mengembalikan kandidat aktif untuk election sesi.
+
+RPC `cast_vote`:
+- memvalidasi `session_hash`;
+- mengunci baris sesi dan voter dengan `for update`;
+- menolak sesi terpakai/kedaluwarsa;
+- menolak election yang tidak `open`, dijeda, belum mulai, atau sudah lewat `ends_at`;
+- memastikan kandidat aktif berasal dari election yang sama;
+- memastikan `voters.has_voted = false`;
+- memasukkan satu baris ke `votes` tanpa identitas pemilih;
+- memperbarui `voters.has_voted` dan `voted_at`;
+- menandai sesi sebagai sudah digunakan.
+
+Semua langkah RPC `cast_vote` berada dalam satu transaksi database. Dua submit
+bersamaan dari sesi atau voter yang sama hanya dapat menghasilkan satu suara.
 
 ### `audit_logs`
 
@@ -141,6 +180,9 @@ Menyimpan jejak aksi penting seperti perubahan data sekolah, pemilihan, kandidat
 Perubahan status kotak suara dicatat dengan action `election.status_changed`
 dan metadata status lama, status baru, serta transisi yang dijalankan. Metadata
 tidak menyimpan token pemilih atau data rahasia.
+
+Penerimaan suara dapat dicatat sebagai agregat `vote.cast` pada entity election
+tanpa menyimpan voter dan candidate dalam entri audit yang sama.
 
 ## RLS Awal
 
@@ -166,8 +208,6 @@ Untuk login admin fase ketiga, akun harus sudah ada di Supabase Auth dan memilik
 
 ## Hal yang Belum Dibuat
 
-- Tidak ada RPC `cast_vote`.
 - Tidak ada CRUD kandidat atau pemilih.
-- Tidak ada alur login pemilih.
 - Tidak ada grafik hasil.
 - Tidak ada animasi pengumuman.

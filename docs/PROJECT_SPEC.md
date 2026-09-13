@@ -122,3 +122,16 @@ Fondasi pengelolaan kandidat sebelum fitur pemilih dan voting:
 - Kotak suara hanya dapat dibuka jika jadwal valid, waktu selesai belum terlewati, minimal dua kandidat aktif, terdapat pemilih, dan seluruh pemilih memiliki token.
 - Status efektif dihitung di server; jika jadwal selesai sudah terlewati, kotak suara dianggap tidak menerima suara walaupun status database masih `open`.
 - Fase ini belum membuat login pemilih, penyimpanan suara, penghitungan hasil, atau pengumuman.
+
+### Fase 9: Login Token dan Pemberian Suara
+
+- Pemilih masuk melalui `/pilih` menggunakan token satu kali.
+- Token dinormalisasi dan di-hash dengan HMAC-SHA-256 memakai `VOTER_TOKEN_PEPPER`.
+- Token mentah tidak dikirim melalui URL, tidak disimpan di localStorage/sessionStorage, dan tidak dicatat di log.
+- Setelah token valid, aplikasi membuat sesi pemilih sementara selama 15 menit.
+- Cookie sesi bersifat HttpOnly, SameSite=Strict, Secure pada production, dan hanya menyimpan secret acak sesi.
+- Halaman `/pilih/kandidat` menampilkan kandidat aktif dari election sesi pemilih.
+- Pemberian suara dilakukan melalui RPC database atomik agar insert `votes`, update `voters.has_voted`, dan penandaan sesi terpakai berhasil atau gagal bersama.
+- Tabel `votes` tetap anonim dan tidak menyimpan voter, session, token, nama, kelas, atau external id.
+- Halaman `/pilih/selesai` tidak menampilkan kandidat yang dipilih.
+- Fase ini belum membuat grafik hasil, publikasi hasil, atau pengumuman.
