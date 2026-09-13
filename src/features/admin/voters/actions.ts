@@ -18,11 +18,6 @@ const voterSchema = z.object({
     .trim()
     .min(1, "Kelas wajib diisi.")
     .max(80, "Nama kelas terlalu panjang."),
-  externalId: z
-    .string()
-    .trim()
-    .min(1, "NIS wajib diisi.")
-    .max(80, "NIS terlalu panjang."),
   fullName: z
     .string()
     .trim()
@@ -39,9 +34,16 @@ const importRowsSchema = z.array(
     jenis_kelamin: z.enum(["L", "P"]),
     kelas: z.string().trim().min(1),
     nama: z.string().trim().min(1),
-    nis: z.string().trim().min(1),
   }),
 );
+
+function normalizeDuplicateText(value: string | null): string {
+  return (value ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function getVoterDuplicateKey(fullName: string | null, className: string | null): string {
+  return `${normalizeDuplicateText(fullName)}::${normalizeDuplicateText(className)}`;
+}
 
 async function getAdminElectionContext() {
   const supabase = await createSupabaseServerClient();
@@ -78,7 +80,6 @@ export async function saveVoter(
 ): Promise<AdminFormState> {
   const parsed = voterSchema.safeParse({
     className: formData.get("className"),
-    externalId: formData.get("externalId"),
     fullName: formData.get("fullName"),
     gender: formData.get("gender"),
     voterId: formData.get("voterId") ?? "",
@@ -119,24 +120,26 @@ export async function saveVoter(
     };
   }
 
-  const { data: duplicateVoter } = await supabase
-    .from("voters")
-    .select("id")
-    .eq("election_id", dashboardData.election.id)
-    .eq("external_id", parsed.data.externalId)
-    .neq("id", voterId || crypto.randomUUID())
-    .maybeSingle();
+  const existingVoters = await getExistingVoters(dashboardData.election.id);
+  const duplicateKey = getVoterDuplicateKey(
+    parsed.data.fullName,
+    parsed.data.className,
+  );
+  const duplicateVoter = existingVoters.find(
+    (voter) =>
+      voter.id !== voterId &&
+      getVoterDuplicateKey(voter.full_name, voter.class_name) === duplicateKey,
+  );
 
   if (duplicateVoter) {
     return {
       status: "error",
-      message: "NIS sudah terdaftar pada pemilihan ini.",
+      message: "Pemilih dengan nama dan kelas yang sama sudah terdaftar.",
     };
   }
 
   const payload = {
     class_name: parsed.data.className,
-    external_id: parsed.data.externalId,
     full_name: parsed.data.fullName,
     gender: parsed.data.gender,
   };
@@ -149,6 +152,7 @@ export async function saveVoter(
     : await supabase.from("voters").insert({
         ...payload,
         election_id: dashboardData.election.id,
+        external_id: null,
         token_hash: null,
       });
 
@@ -157,7 +161,7 @@ export async function saveVoter(
       status: "error",
       message:
         result.error.code === "23505"
-          ? "NIS sudah terdaftar pada pemilihan ini."
+          ? "Data pemilih sudah terdaftar pada pemilihan ini."
           : "Data pemilih belum bisa disimpan.",
     };
   }
@@ -327,15 +331,21 @@ export async function confirmVoterImport(
 
   const election = dashboardData.election;
   const existingVoters = await getExistingVoters(election.id);
-  const existingNis = new Set(existingVoters.map((voter) => voter.external_id));
-  const rowsToInsert = parsedRows.data.filter((row) => !existingNis.has(row.nis));
+  const existingKeys = new Set(
+    existingVoters.map((voter) =>
+      getVoterDuplicateKey(voter.full_name, voter.class_name),
+    ),
+  );
+  const rowsToInsert = parsedRows.data.filter(
+    (row) => !existingKeys.has(getVoterDuplicateKey(row.nama, row.kelas)),
+  );
 
   if (rowsToInsert.length !== parsedRows.data.length) {
     return {
       ...initialVoterImportState,
       status: "error",
       message:
-        "Sebagian NIS sudah ada sejak preview dibuat. Unggah file kembali untuk preview terbaru.",
+        "Sebagian nama dan kelas sudah ada sejak preview dibuat. Unggah file kembali untuk preview terbaru.",
     };
   }
 
@@ -343,7 +353,7 @@ export async function confirmVoterImport(
     rowsToInsert.map((row: VoterImportRow) => ({
       class_name: row.kelas,
       election_id: election.id,
-      external_id: row.nis,
+      external_id: null,
       full_name: row.nama,
       gender: row.jenis_kelamin,
       token_hash: null,

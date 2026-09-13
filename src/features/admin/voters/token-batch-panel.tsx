@@ -2,7 +2,10 @@
 
 import { useActionState } from "react";
 
-import { generateMissingVoterTokens } from "./token-actions";
+import {
+  generateMissingVoterTokens,
+  regenerateAllUnvotedVoterTokens,
+} from "./token-actions";
 import { initialVoterTokenBatchState } from "./token-state";
 import type { GeneratedVoterToken } from "./token-state";
 
@@ -17,10 +20,9 @@ function escapeCsvValue(value: string): string {
 }
 
 function downloadTokenCsv(tokens: GeneratedVoterToken[]) {
-  const header = "nis,nama,kelas,token";
+  const header = "nama,kelas,token";
   const rows = tokens.map((token) =>
     [
-      token.nis,
       token.nama,
       token.kelas,
       token.token,
@@ -28,15 +30,21 @@ function downloadTokenCsv(tokens: GeneratedVoterToken[]) {
       .map(escapeCsvValue)
       .join(","),
   );
-  const csv = [header, ...rows].join("\r\n");
+  const csv = `\uFEFF${[header, ...rows].join("\r\n")}`;
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
 
   link.href = url;
   link.download = "token-pemilih.csv";
+  link.style.display = "none";
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(url);
+
+  window.setTimeout(() => {
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, 0);
 }
 
 export function TokenBatchPanel({
@@ -44,11 +52,21 @@ export function TokenBatchPanel({
   votedCount,
   withTokenCount,
 }: TokenBatchPanelProps) {
-  const [state, formAction, isPending] = useActionState(
+  const [generateState, generateFormAction, isGenerating] = useActionState(
     generateMissingVoterTokens,
     initialVoterTokenBatchState,
   );
-  const hasTokens = state.tokens.length > 0;
+  const [regenerateState, regenerateFormAction, isRegenerating] =
+    useActionState(
+      regenerateAllUnvotedVoterTokens,
+      initialVoterTokenBatchState,
+    );
+  const displayTokens =
+    regenerateState.tokens.length > 0
+      ? regenerateState.tokens
+      : generateState.tokens;
+  const hasTokens = displayTokens.length > 0;
+  const canRegenerateAll = missingTokenCount === 0 && withTokenCount > 0;
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
@@ -65,27 +83,63 @@ export function TokenBatchPanel({
             hasil pembuatan dan simpan di tempat yang aman untuk dicetak atau
             dibagikan oleh panitia.
           </p>
+          <p className="mt-2 max-w-2xl text-sm font-medium text-amber-800">
+            CSV token hanya dapat diunduh segera setelah pembuatan atau
+            regenerasi.
+          </p>
         </div>
-        <form
-          action={formAction}
-          onSubmit={(event) => {
-            if (
-              !window.confirm(
-                "Buat token untuk semua pemilih yang belum memiliki token?",
-              )
-            ) {
-              event.preventDefault();
-            }
-          }}
-        >
-          <button
-            className="min-h-10 rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300"
-            disabled={isPending || missingTokenCount === 0}
-            type="submit"
+        <div className="flex flex-col gap-3 sm:items-end">
+          <form
+            action={generateFormAction}
+            onSubmit={(event) => {
+              if (
+                !window.confirm(
+                  "Buat token untuk semua pemilih yang belum memiliki token?",
+                )
+              ) {
+                event.preventDefault();
+              }
+            }}
           >
-            {isPending ? "Membuat token..." : "Generate token"}
-          </button>
-        </form>
+            <button
+              className="min-h-10 rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+              disabled={isGenerating || missingTokenCount === 0}
+              type="submit"
+            >
+              {isGenerating ? "Membuat token..." : "Generate token"}
+            </button>
+          </form>
+          {canRegenerateAll ? (
+            <form
+              action={regenerateFormAction}
+              onSubmit={(event) => {
+                if (
+                  !window.confirm(
+                    [
+                      "Regenerasi semua token pemilih yang belum memilih?",
+                      "",
+                      "Semua token lama milik pemilih yang belum memilih akan dibatalkan.",
+                      "Kartu/file token lama tidak akan berlaku.",
+                      "Token pemilih yang sudah memilih tidak akan diubah.",
+                    ].join("\n"),
+                  )
+                ) {
+                  event.preventDefault();
+                }
+              }}
+            >
+              <button
+                className="min-h-10 rounded-md border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-amber-800 transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+                disabled={isRegenerating}
+                type="submit"
+              >
+                {isRegenerating
+                  ? "Meregenerasi token..."
+                  : "Regenerasi Semua Token yang Belum Memilih"}
+              </button>
+            </form>
+          ) : null}
+        </div>
       </div>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-3">
@@ -115,13 +169,27 @@ export function TokenBatchPanel({
         </div>
       </div>
 
-      {state.message ? (
+      {generateState.message ? (
         <p
           className={`mt-4 text-sm ${
-            state.status === "success" ? "text-emerald-700" : "text-red-700"
+            generateState.status === "success"
+              ? "text-emerald-700"
+              : "text-red-700"
           }`}
         >
-          {state.message}
+          {generateState.message}
+        </p>
+      ) : null}
+
+      {regenerateState.message ? (
+        <p
+          className={`mt-4 text-sm ${
+            regenerateState.status === "success"
+              ? "text-emerald-700"
+              : "text-red-700"
+          }`}
+        >
+          {regenerateState.message}
         </p>
       ) : null}
 
@@ -137,27 +205,23 @@ export function TokenBatchPanel({
           </p>
           <button
             className="mt-4 min-h-10 rounded-md bg-amber-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-800"
-            onClick={() => downloadTokenCsv(state.tokens)}
+            onClick={() => downloadTokenCsv(displayTokens)}
             type="button"
           >
-            Unduh CSV token
+            Unduh CSV Token Sekarang
           </button>
           <div className="mt-4 max-h-72 overflow-auto rounded-md border border-amber-200 bg-white">
             <table className="min-w-full divide-y divide-amber-100 text-sm">
               <thead className="bg-amber-100 text-left text-amber-950">
                 <tr>
-                  <th className="px-3 py-2 font-medium">NIS</th>
                   <th className="px-3 py-2 font-medium">Nama</th>
                   <th className="px-3 py-2 font-medium">Kelas</th>
                   <th className="px-3 py-2 font-medium">Token</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-amber-100">
-                {state.tokens.map((token) => (
-                  <tr key={`${token.nis}-${token.token}`}>
-                    <td className="whitespace-nowrap px-3 py-2">
-                      {token.nis}
-                    </td>
+                {displayTokens.map((token) => (
+                  <tr key={`${token.nama}-${token.kelas}-${token.token}`}>
                     <td className="px-3 py-2">{token.nama}</td>
                     <td className="whitespace-nowrap px-3 py-2">
                       {token.kelas}

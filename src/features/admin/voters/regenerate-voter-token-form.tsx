@@ -59,7 +59,7 @@ export function RegenerateVoterTokenForm({
           <p>{state.message}</p>
           {state.token ? (
             <p className="mt-1 rounded-md border border-amber-200 bg-amber-50 p-2 font-mono text-sm font-semibold text-amber-950">
-              {state.nis} - {state.token}
+              {state.nama} - {state.token}
             </p>
           ) : null}
         </div>

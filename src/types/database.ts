@@ -202,7 +202,7 @@ export type Database = {
         Row: {
           id: string;
           election_id: string;
-          external_id: string;
+          external_id: string | null;
           full_name: string;
           gender: string | null;
           class_name: string | null;
@@ -217,7 +217,7 @@ export type Database = {
         Insert: {
           id?: string;
           election_id: string;
-          external_id: string;
+          external_id?: string | null;
           full_name: string;
           gender?: string | null;
           class_name?: string | null;
@@ -232,7 +232,7 @@ export type Database = {
         Update: {
           id?: string;
           election_id?: string;
-          external_id?: string;
+          external_id?: string | null;
           full_name?: string;
           gender?: string | null;
           class_name?: string | null;
@@ -286,6 +286,7 @@ export type Database = {
         | "voter.updated"
         | "voter_tokens.generated"
         | "voter_token.regenerated"
+        | "voter_tokens.regenerated"
         | "vote.cast"
         | "results.published";
       election_status: "draft" | "scheduled" | "open" | "closed" | "archived";

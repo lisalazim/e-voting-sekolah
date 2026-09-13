@@ -104,8 +104,9 @@ export default async function AdminVotersPage({ searchParams }: VotersPageProps)
               Daftar Pemilih
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-              Kelola pemilih untuk kegiatan {data.election.title}. NIS
-              diperlakukan sebagai teks agar angka nol di depan tetap aman.
+              Kelola pemilih untuk kegiatan {data.election.title}. Pemilih
+              nantinya masuk menggunakan token, sehingga data admin cukup nama,
+              kelas, dan jenis kelamin.
             </p>
           </div>
           {data.editedVoter ? (

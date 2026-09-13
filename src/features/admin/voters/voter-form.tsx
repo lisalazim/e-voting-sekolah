@@ -21,18 +21,6 @@ export function VoterForm({ voter }: VoterFormProps) {
       <input name="voterId" type="hidden" value={voter?.id ?? ""} />
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-700" htmlFor="externalId">
-            NIS
-          </label>
-          <input
-            className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-950 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-            defaultValue={voter?.external_id ?? ""}
-            id="externalId"
-            name="externalId"
-            required
-          />
-        </div>
-        <div className="space-y-2">
           <label className="block text-sm font-medium text-slate-700" htmlFor="className">
             Kelas
           </label>
@@ -44,7 +32,7 @@ export function VoterForm({ voter }: VoterFormProps) {
             required
           />
         </div>
-        <div className="space-y-2 sm:col-span-2">
+        <div className="space-y-2">
           <label className="block text-sm font-medium text-slate-700" htmlFor="fullName">
             Nama
           </label>

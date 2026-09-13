@@ -28,7 +28,6 @@ export function VoterList({ voters }: VoterListProps) {
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-left text-slate-600">
             <tr>
-              <th className="px-4 py-3 font-medium">NIS</th>
               <th className="px-4 py-3 font-medium">Nama</th>
               <th className="px-4 py-3 font-medium">Kelas</th>
               <th className="px-4 py-3 font-medium">JK</th>
@@ -51,9 +50,6 @@ export function VoterList({ voters }: VoterListProps) {
 
               return (
                 <tr key={voter.id}>
-                  <td className="whitespace-nowrap px-4 py-3 text-slate-700">
-                    {voter.external_id}
-                  </td>
                   <td className="min-w-56 px-4 py-3 font-medium text-slate-950">
                     {voter.full_name}
                   </td>

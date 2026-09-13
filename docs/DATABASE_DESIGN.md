@@ -83,7 +83,8 @@ Aturan:
 Menyimpan daftar pemilih sah untuk satu pemilihan.
 
 Kolom penting:
-- `external_id`: nomor induk atau identifier sekolah.
+- `id`: UUID utama pemilih dan identitas internal yang dipakai sistem.
+- `external_id`: nomor induk atau identifier sekolah dari data lama. Kolom ini nullable dan tidak diwajibkan pada antarmuka admin.
 - `full_name`: nama pemilih.
 - `class_name`: kelas pemilih.
 - `gender`: `L` atau `P`.
@@ -99,17 +100,18 @@ Catatan operasional:
 - Secret HMAC dibaca dari environment server-only `VOTER_TOKEN_PEPPER`; nilai ini harus secret acak yang kuat dan tidak boleh dikirim ke browser.
 - Input token harus dinormalisasi dengan menghapus spasi/tanda hubung dan mengubah huruf menjadi kapital sebelum hashing.
 - Token asli hanya tersedia satu kali saat dibuat atau diregenerasi. Setelah halaman ditutup atau dimuat ulang, aplikasi tidak dapat menampilkan token asli kembali.
-- CSV token berisi `nis,nama,kelas,token` dan harus disimpan, dicetak, serta dibagikan secara terbatas oleh panitia.
+- CSV token berisi `nama,kelas,token` dan harus disimpan, dicetak, serta dibagikan secara terbatas oleh panitia.
 - File token tidak boleh diunggah ke tempat publik, dikirim ke grup terbuka, atau dicatat dalam audit log.
+- Data lama yang memiliki `external_id` tetap dapat digunakan, tetapi token dan UI admin tidak menampilkan NIS/NISN.
 
 Format impor pemilih:
 - File didukung: `.xlsx` dan `.csv`.
-- Header wajib: `nis,nama,kelas,jenis_kelamin`.
-- `nis`, `nama`, `kelas`, dan `jenis_kelamin` wajib diisi.
-- `nis` diperlakukan sebagai teks.
+- Header wajib: `nama,kelas,jenis_kelamin`.
+- `nama`, `kelas`, dan `jenis_kelamin` wajib diisi.
 - `jenis_kelamin` hanya menerima `L` atau `P`.
 - Maksimal 1.500 baris per file.
-- Sistem mendeteksi NIS duplikat dalam file dan NIS yang sudah ada pada pemilihan yang sama.
+- Sistem mendeteksi kemungkinan duplikat memakai kombinasi nama yang dinormalisasi dan kelas dalam pemilihan yang sama.
+- Baris dengan kemungkinan duplikat ditandai sebagai duplikat pada preview dan tidak diimpor otomatis.
 
 ### `votes`
 

@@ -64,9 +64,7 @@ export async function getAdminVotersData(
 
   if (searchParams.query) {
     const escapedQuery = searchParams.query.replaceAll("%", "\\%");
-    votersQuery = votersQuery.or(
-      `external_id.ilike.%${escapedQuery}%,full_name.ilike.%${escapedQuery}%`,
-    );
+    votersQuery = votersQuery.ilike("full_name", `%${escapedQuery}%`);
   }
 
   if (searchParams.className) {

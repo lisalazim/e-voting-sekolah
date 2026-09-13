@@ -151,6 +151,9 @@ Berisi migration SQL untuk schema database Supabase. Migration awal mendefinisik
 - Pengelolaan daftar pemilih admin berada di `src/features/admin/voters`.
 - Impor `.xlsx` memakai ExcelJS dan `.csv` memakai Papa Parse.
 - Preview impor tidak menyimpan data; data baru disimpan setelah konfirmasi impor.
+- Template impor pemilih memakai `nama,kelas,jenis_kelamin`.
+- UUID `voters.id` menjadi identitas internal pemilih; NIS/NISN lama disimpan sebagai `external_id` nullable untuk kompatibilitas dan tidak ditampilkan pada UI admin.
+- Deteksi kemungkinan duplikat memakai kombinasi nama yang dinormalisasi dan kelas.
 - Server Actions pemilih selalu memeriksa session, role `admin`, dan pemilihan milik sekolah admin.
 - `school_id` dan `election_id` tidak diambil dari browser sebagai sumber kebenaran.
 - Belum ada token pemilih, voting, hasil, atau mode pengumuman.
@@ -164,7 +167,7 @@ Berisi migration SQL untuk schema database Supabase. Migration awal mendefinisik
 - Token dinormalisasi sebelum hashing dengan menghapus spasi/tanda hubung dan mengubah huruf menjadi kapital.
 - Database hanya menerima hasil HMAC-SHA-256 dari token menggunakan `VOTER_TOKEN_PEPPER`.
 - UI admin tidak menampilkan `token_hash`.
-- Hasil token asli batch dapat diunduh sebagai CSV satu kali dari state browser setelah aksi berhasil.
+- Hasil token asli batch dapat diunduh sebagai CSV `nama,kelas,token` satu kali dari state browser setelah aksi berhasil.
 
 ## Batasan Fase Pertama
 

@@ -34,8 +34,7 @@ export function VoterImportForm() {
             type="file"
           />
           <p className="text-xs leading-5 text-slate-500">
-            Format: nis, nama, kelas, jenis_kelamin. Maksimal 1.500 baris dan
-            2 MB.
+            Format: nama, kelas, jenis_kelamin. Maksimal 1.500 baris dan 2 MB.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -86,18 +85,18 @@ export function VoterImportForm() {
               <thead className="bg-slate-50 text-left text-slate-600">
                 <tr>
                   <th className="px-3 py-2 font-medium">Baris</th>
-                  <th className="px-3 py-2 font-medium">NIS</th>
                   <th className="px-3 py-2 font-medium">Nama</th>
+                  <th className="px-3 py-2 font-medium">Kelas</th>
                   <th className="px-3 py-2 font-medium">Status</th>
                   <th className="px-3 py-2 font-medium">Alasan</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
                 {previewState.preview.rows.slice(0, 100).map((row) => (
-                  <tr key={`${row.rowNumber}-${row.nis}`}>
+                  <tr key={`${row.rowNumber}-${row.nama}-${row.kelas}`}>
                     <td className="px-3 py-2">{row.rowNumber}</td>
-                    <td className="px-3 py-2">{row.nis}</td>
                     <td className="px-3 py-2">{row.nama}</td>
+                    <td className="px-3 py-2">{row.kelas}</td>
                     <td className="px-3 py-2">{row.status}</td>
                     <td className="px-3 py-2">{row.reason || "-"}</td>
                   </tr>

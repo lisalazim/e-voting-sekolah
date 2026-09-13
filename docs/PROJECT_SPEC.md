@@ -96,10 +96,12 @@ Fondasi pengelolaan kandidat sebelum fitur pemilih dan voting:
 ### Fase 6: Daftar Pemilih
 
 - Halaman `/admin/pemilih` untuk melihat, mencari, memfilter, menambah, mengedit, dan menghapus pemilih.
-- Kolom pemilih: NIS, nama, kelas, jenis kelamin, dan status memilih.
+- Kolom pemilih: nama, kelas, jenis kelamin, dan status memilih.
 - Impor daftar pemilih dari `.xlsx` dan `.csv`.
-- Template impor memakai header `nis,nama,kelas,jenis_kelamin`.
+- Template impor memakai header `nama,kelas,jenis_kelamin`.
 - Preview impor wajib dilakukan sebelum konfirmasi simpan.
+- NIS/NISN tidak diwajibkan karena pemilih nantinya masuk memakai token.
+- Data lama yang masih memiliki NIS/NISN tetap dipertahankan di database untuk kompatibilitas, tetapi tidak ditampilkan pada antarmuka admin.
 - Belum membuat token pemilih, proses voting, hasil, atau mode pengumuman.
 
 ### Fase 7: Token Pemilih

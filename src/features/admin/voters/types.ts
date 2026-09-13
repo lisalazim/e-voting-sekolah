@@ -6,7 +6,6 @@ export type TokenStatusFilter = "missing-token" | "with-token" | "voted";
 export type AdminVoter = Database["public"]["Tables"]["voters"]["Row"];
 
 export type VoterImportRow = {
-  nis: string;
   nama: string;
   kelas: string;
   jenis_kelamin: Gender;

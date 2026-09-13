@@ -1,7 +1,6 @@
 export type GeneratedVoterToken = {
   kelas: string;
   nama: string;
-  nis: string;
   token: string;
 };
 
@@ -14,7 +13,6 @@ export type VoterTokenBatchState = {
 export type VoterTokenSingleState = {
   message: string;
   nama: string;
-  nis: string;
   status: "idle" | "success" | "error";
   token: string;
 };
@@ -28,7 +26,6 @@ export const initialVoterTokenBatchState: VoterTokenBatchState = {
 export const initialVoterTokenSingleState: VoterTokenSingleState = {
   message: "",
   nama: "",
-  nis: "",
   status: "idle",
   token: "",
 };

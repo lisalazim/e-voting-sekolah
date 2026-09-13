@@ -5,8 +5,15 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "../../../lib/supabase/server";
 import type { AdminElection } from "../dashboard/queries";
 import { getAdminDashboardData } from "../dashboard/queries";
-import type { GeneratedVoterToken, VoterTokenBatchState, VoterTokenSingleState } from "./token-state";
-import { initialVoterTokenBatchState, initialVoterTokenSingleState } from "./token-state";
+import type {
+  GeneratedVoterToken,
+  VoterTokenBatchState,
+  VoterTokenSingleState,
+} from "./token-state";
+import {
+  initialVoterTokenBatchState,
+  initialVoterTokenSingleState,
+} from "./token-state";
 import { generateVoterToken, hashVoterToken } from "./token-utils";
 import type { AdminVoter } from "./types";
 
@@ -14,7 +21,7 @@ const MAX_TOKEN_GENERATION_ATTEMPTS = 20;
 
 type TokenVoter = Pick<
   AdminVoter,
-  "class_name" | "external_id" | "full_name" | "has_voted" | "id" | "token_hash"
+  "class_name" | "full_name" | "has_voted" | "id" | "token_hash"
 >;
 
 function canCreateTokens(election: AdminElection): boolean {
@@ -111,7 +118,7 @@ export async function generateMissingVoterTokens(
 
   const { data: votersData, error: votersError } = await supabase
     .from("voters")
-    .select("id, external_id, full_name, class_name, token_hash, has_voted")
+    .select("id, full_name, class_name, token_hash, has_voted")
     .eq("election_id", dashboardData.election.id)
     .eq("has_voted", false)
     .is("token_hash", null)
@@ -169,7 +176,6 @@ export async function generateMissingVoterTokens(
       generatedTokens.push({
         kelas: voter.class_name ?? "",
         nama: voter.full_name,
-        nis: voter.external_id,
         token,
       });
     }
@@ -199,6 +205,134 @@ export async function generateMissingVoterTokens(
 
   return {
     message: `${generatedTokens.length} token berhasil dibuat. Token asli hanya tampil sekali pada hasil ini.`,
+    status: "success",
+    tokens: generatedTokens,
+  };
+}
+
+export async function regenerateAllUnvotedVoterTokens(
+  _previousState: VoterTokenBatchState,
+): Promise<VoterTokenBatchState> {
+  void _previousState;
+
+  const { dashboardData, supabase } = await getTokenContext();
+
+  if (!dashboardData) {
+    return {
+      ...initialVoterTokenBatchState,
+      status: "error",
+      message: "Sesi admin tidak valid. Silakan masuk kembali.",
+    };
+  }
+
+  if (!dashboardData.school || !dashboardData.election) {
+    return {
+      ...initialVoterTokenBatchState,
+      status: "error",
+      message: "Buat pengaturan sekolah dan pemilihan terlebih dahulu.",
+    };
+  }
+
+  if (!canCreateTokens(dashboardData.election)) {
+    return {
+      ...initialVoterTokenBatchState,
+      status: "error",
+      message: getTokenBlockedMessage(dashboardData.election),
+    };
+  }
+
+  const { data: votersData, error: votersError } = await supabase
+    .from("voters")
+    .select("id, full_name, class_name, token_hash, has_voted")
+    .eq("election_id", dashboardData.election.id)
+    .eq("has_voted", false)
+    .order("class_name", { ascending: true })
+    .order("full_name", { ascending: true });
+
+  if (votersError) {
+    return {
+      ...initialVoterTokenBatchState,
+      status: "error",
+      message: "Daftar pemilih belum bisa dibaca.",
+    };
+  }
+
+  const voters = (votersData ?? []) as TokenVoter[];
+
+  if (voters.length === 0) {
+    return {
+      ...initialVoterTokenBatchState,
+      status: "success",
+      message: "Tidak ada pemilih belum memilih yang dapat diregenerasi.",
+    };
+  }
+
+  const generatedTokens: GeneratedVoterToken[] = [];
+  const usedHashes = await getUsedTokenHashes(dashboardData.election.id);
+  const issuedAt = new Date().toISOString();
+
+  for (const voter of voters) {
+    if (voter.token_hash) {
+      usedHashes.delete(voter.token_hash);
+    }
+  }
+
+  try {
+    for (const voter of voters) {
+      const token = createUniqueToken(usedHashes);
+      const tokenHash = hashVoterToken(token);
+      const { data: updatedVoter, error: updateError } = await supabase
+        .from("voters")
+        .update({
+          token_hash: tokenHash,
+          token_issued_at: issuedAt,
+          token_revoked_at: null,
+        })
+        .eq("id", voter.id)
+        .eq("election_id", dashboardData.election.id)
+        .eq("has_voted", false)
+        .select("id")
+        .maybeSingle();
+
+      if (updateError || !updatedVoter) {
+        return {
+          ...initialVoterTokenBatchState,
+          status: "error",
+          message:
+            "Sebagian token belum bisa diregenerasi. Jalankan ulang untuk pemilih yang belum memilih.",
+        };
+      }
+
+      generatedTokens.push({
+        kelas: voter.class_name ?? "",
+        nama: voter.full_name,
+        token,
+      });
+    }
+  } catch (error) {
+    return {
+      ...initialVoterTokenBatchState,
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "Token belum bisa diregenerasi. Periksa konfigurasi server.",
+    };
+  }
+
+  await supabase.from("audit_logs").insert({
+    action: "voter_tokens.regenerated",
+    actor_id: dashboardData.admin.profile.id,
+    entity_id: dashboardData.election.id,
+    entity_type: "election",
+    metadata: {
+      count: generatedTokens.length,
+    },
+    school_id: dashboardData.school.id,
+  });
+
+  return {
+    message: `${generatedTokens.length} token berhasil diregenerasi. Token lama untuk pemilih yang belum memilih otomatis tidak berlaku.`,
     status: "success",
     tokens: generatedTokens,
   };
@@ -240,7 +374,7 @@ export async function regenerateVoterToken(
 
   const { data: voterData } = await supabase
     .from("voters")
-    .select("id, external_id, full_name, class_name, token_hash, has_voted")
+    .select("id, full_name, class_name, token_hash, has_voted")
     .eq("id", voterId)
     .eq("election_id", dashboardData.election.id)
     .maybeSingle();
@@ -308,7 +442,6 @@ export async function regenerateVoterToken(
     return {
       message: "Token baru berhasil dibuat. Token lama otomatis tidak berlaku.",
       nama: voter.full_name,
-      nis: voter.external_id,
       status: "success",
       token,
     };

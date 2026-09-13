@@ -13,7 +13,6 @@ export const VOTER_IMPORT_MIME_TYPES = [
 ] as const;
 
 type RawImportRow = {
-  nis: string;
   nama: string;
   kelas: string;
   jenis_kelamin: string;
@@ -34,13 +33,17 @@ function getGender(value: string): Gender | null {
   return normalized === "L" || normalized === "P" ? normalized : null;
 }
 
+function normalizeDuplicateText(value: string): string {
+  return value.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function getDuplicateKey(nama: string, kelas: string): string {
+  return `${normalizeDuplicateText(nama)}::${normalizeDuplicateText(kelas)}`;
+}
+
 function validateRawRow(row: RawImportRow): VoterImportPreviewRow {
   const gender = getGender(row.jenis_kelamin);
   const reasons: string[] = [];
-
-  if (!row.nis) {
-    reasons.push("NIS wajib diisi");
-  }
 
   if (!row.nama) {
     reasons.push("Nama wajib diisi");
@@ -58,7 +61,6 @@ function validateRawRow(row: RawImportRow): VoterImportPreviewRow {
     jenis_kelamin: gender ?? "L",
     kelas: row.kelas,
     nama: row.nama,
-    nis: row.nis,
     reason: reasons.join(", "),
     rowNumber: row.rowNumber,
     status: reasons.length > 0 ? "invalid" : "valid",
@@ -70,7 +72,11 @@ function buildPreview(
   existingVoters: AdminVoter[],
 ): VoterImportPreview {
   const seenInFile = new Map<string, number>();
-  const existingNis = new Set(existingVoters.map((voter) => voter.external_id));
+  const existingKeys = new Set(
+    existingVoters.map((voter) =>
+      getDuplicateKey(voter.full_name, voter.class_name ?? ""),
+    ),
+  );
   const rows = rawRows.map((row) => {
     const validated = validateRawRow(row);
 
@@ -78,22 +84,23 @@ function buildPreview(
       return validated;
     }
 
-    const firstSeenRow = seenInFile.get(validated.nis);
+    const duplicateKey = getDuplicateKey(validated.nama, validated.kelas);
+    const firstSeenRow = seenInFile.get(duplicateKey);
 
     if (firstSeenRow) {
       return {
         ...validated,
-        reason: `NIS duplikat di file, pertama muncul pada baris ${firstSeenRow}`,
+        reason: `Kemungkinan duplikat nama dan kelas, pertama muncul pada baris ${firstSeenRow}`,
         status: "duplicate" as const,
       };
     }
 
-    seenInFile.set(validated.nis, validated.rowNumber);
+    seenInFile.set(duplicateKey, validated.rowNumber);
 
-    if (existingNis.has(validated.nis)) {
+    if (existingKeys.has(duplicateKey)) {
       return {
         ...validated,
-        reason: "NIS sudah ada pada pemilihan ini",
+        reason: "Kemungkinan duplikat nama dan kelas pada pemilihan ini",
         status: "duplicate" as const,
       };
     }
@@ -121,7 +128,6 @@ function parseCsv(text: string): RawImportRow[] {
     jenis_kelamin: normalizeText(row.jenis_kelamin),
     kelas: normalizeText(row.kelas),
     nama: normalizeText(row.nama),
-    nis: normalizeText(row.nis),
     rowNumber: index + 2,
   }));
 }
@@ -154,10 +160,9 @@ async function parseXlsx(file: File): Promise<RawImportRow[]> {
     headers.set(normalizeHeader(cell.value), columnNumber);
   });
 
-  const nisColumn = headers.get("nis") ?? 1;
-  const namaColumn = headers.get("nama") ?? 2;
-  const kelasColumn = headers.get("kelas") ?? 3;
-  const genderColumn = headers.get("jenis_kelamin") ?? 4;
+  const namaColumn = headers.get("nama") ?? 1;
+  const kelasColumn = headers.get("kelas") ?? 2;
+  const genderColumn = headers.get("jenis_kelamin") ?? 3;
   const rows: RawImportRow[] = [];
 
   worksheet.eachRow((row, rowNumber) => {
@@ -169,12 +174,10 @@ async function parseXlsx(file: File): Promise<RawImportRow[]> {
       jenis_kelamin: getCellText(row, genderColumn),
       kelas: getCellText(row, kelasColumn),
       nama: getCellText(row, namaColumn),
-      nis: getCellText(row, nisColumn),
       rowNumber,
     };
 
     if (
-      rawRow.nis ||
       rawRow.nama ||
       rawRow.kelas ||
       rawRow.jenis_kelamin
@@ -193,7 +196,6 @@ export function getValidImportRows(preview: VoterImportPreview): VoterImportRow[
       jenis_kelamin: row.jenis_kelamin,
       kelas: row.kelas,
       nama: row.nama,
-      nis: row.nis,
     }));
 }
 
