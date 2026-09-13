@@ -85,6 +85,7 @@ export async function finalizeResults(
 
   revalidatePath("/admin");
   revalidatePath("/admin/hasil");
+  revalidatePath("/admin/pengumuman");
 
   return {
     status: "success",
@@ -145,6 +146,8 @@ export async function publishResults(
 
   revalidatePath("/admin");
   revalidatePath("/admin/hasil");
+  revalidatePath("/admin/pengumuman");
+  revalidatePath("/pengumuman");
 
   return {
     status: "success",
@@ -173,6 +176,13 @@ export async function unpublishResults(
     };
   }
 
+  if (data.election.announcement_started_at) {
+    return {
+      status: "error",
+      message: "Status siap diumumkan tidak dapat dibatalkan setelah pengumuman dimulai.",
+    };
+  }
+
   const { data: updatedElection, error } = await supabase
     .from("elections")
     .update({
@@ -181,6 +191,7 @@ export async function unpublishResults(
     .eq("id", data.election.id)
     .eq("school_id", data.school.id)
     .not("published_at", "is", null)
+    .is("announcement_started_at", null)
     .select("id")
     .maybeSingle();
 
@@ -204,6 +215,8 @@ export async function unpublishResults(
 
   revalidatePath("/admin");
   revalidatePath("/admin/hasil");
+  revalidatePath("/admin/pengumuman");
+  revalidatePath("/pengumuman");
 
   return {
     status: "success",

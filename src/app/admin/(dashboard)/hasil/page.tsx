@@ -200,6 +200,14 @@ export default async function AdminResultsPage() {
           Finalisasi tidak menghitung ulang isi suara. Rekap selalu dibaca dari
           agregasi langsung tabel `votes`.
         </p>
+        {data.election.published_at ? (
+          <Link
+            className="mt-4 inline-flex min-h-10 items-center rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+            href="/admin/pengumuman"
+          >
+            Atur pengumuman
+          </Link>
+        ) : null}
         <div className="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
           <p>
             Finalisasi:{" "}
@@ -216,6 +224,7 @@ export default async function AdminResultsPage() {
         </div>
         <div className="mt-5">
           <ResultControls
+            isAnnouncementStarted={Boolean(data.election.announcement_started_at)}
             isClosed={data.election.status === "closed"}
             isFinalized={Boolean(data.election.finalized_at)}
             isPublished={Boolean(data.election.published_at)}

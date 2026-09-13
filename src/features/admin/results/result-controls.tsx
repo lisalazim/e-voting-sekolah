@@ -10,12 +10,14 @@ import {
 } from "./actions";
 
 type ResultControlsProps = {
+  isAnnouncementStarted: boolean;
   isClosed: boolean;
   isFinalized: boolean;
   isPublished: boolean;
 };
 
 export function ResultControls({
+  isAnnouncementStarted,
   isClosed,
   isFinalized,
   isPublished,
@@ -84,7 +86,7 @@ export function ResultControls({
         >
           <button
             className="min-h-10 rounded-md border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-amber-800 transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
-            disabled={!isPublished || isUnpublishing}
+            disabled={!isPublished || isAnnouncementStarted || isUnpublishing}
             type="submit"
           >
             {isUnpublishing ? "Membatalkan..." : "Batalkan Siap Diumumkan"}

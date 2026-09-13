@@ -21,6 +21,7 @@ src/
     results/
     voters/
     voting/
+    announcement/
   lib/
   types/
   utils/
@@ -61,6 +62,11 @@ Berisi modul alur pemberian suara publik, termasuk login token pemilih, cookie s
 ### `src/features/results`
 
 Berisi modul rekap hasil, agregasi suara, dan tampilan hasil pemilihan sesuai aturan publikasi.
+
+### `src/features/announcement`
+
+Berisi modul pengumuman hasil publik, termasuk pembacaan status countdown,
+fetch hasil final setelah reveal, dan komponen layar publik.
 
 ### `src/lib`
 
@@ -110,6 +116,7 @@ Berisi route admin:
 - `/admin/pemilih` untuk pengelolaan dan impor daftar pemilih.
 - `/admin/kotak-suara` untuk kontrol status kotak suara.
 - `/admin/hasil` untuk penghitungan, finalisasi, dan status siap diumumkan.
+- `/admin/pengumuman` untuk memulai countdown pengumuman hasil publik.
 
 ### `supabase/migrations`
 
@@ -206,6 +213,20 @@ Berisi migration SQL untuk schema database Supabase. Migration awal mendefinisik
 - Status siap diumumkan memakai `published_at`; pembatalan siap diumumkan mengosongkan `published_at`.
 - Setelah finalisasi, Server Actions kandidat dan pengaturan pemilihan menolak perubahan.
 - Fase ini tidak membuat countdown, animasi, atau halaman hasil publik.
+
+## Pengumuman Publik Fase Kesebelas
+
+- Kontrol admin pengumuman berada di `src/features/admin/announcement`.
+- Route admin `/admin/pengumuman` menampilkan checklist kesiapan dan tombol
+  `Mulai Pengumuman`.
+- Route publik `/pengumuman` hanya membaca status pengumuman dan timestamp
+  reveal. Data suara tidak dikirim ke halaman sebelum waktu reveal tercapai.
+- Route handler `/pengumuman/hasil` memanggil RPC publik agregasi hasil dan
+  menolak request sebelum `results_revealed_at`.
+- Countdown dihitung dari `server_now` dan `results_revealed_at`, sehingga
+  refresh halaman atau perangkat berbeda tidak memulai ulang hitungan.
+- Hasil publik tetap anonim: endpoint hanya mengembalikan data kandidat dan
+  agregat suara, tanpa data pemilih, sesi, token, atau waktu voting individual.
 
 ## Batasan Fase Pertama
 

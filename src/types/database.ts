@@ -98,6 +98,8 @@ export type Database = {
           published_at: string | null;
           finalized_at: string | null;
           finalized_by: string | null;
+          announcement_started_at: string | null;
+          results_revealed_at: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -115,6 +117,8 @@ export type Database = {
           published_at?: string | null;
           finalized_at?: string | null;
           finalized_by?: string | null;
+          announcement_started_at?: string | null;
+          results_revealed_at?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -132,6 +136,8 @@ export type Database = {
           published_at?: string | null;
           finalized_at?: string | null;
           finalized_by?: string | null;
+          announcement_started_at?: string | null;
+          results_revealed_at?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -342,6 +348,38 @@ export type Database = {
           status: string;
         }[];
       };
+      get_public_announcement_state: {
+        Args: Record<string, never>;
+        Returns: {
+          announcement_started_at: string | null;
+          election_term_label: string | null;
+          election_title: string | null;
+          results_revealed_at: string | null;
+          school_logo_url: string | null;
+          school_name: string | null;
+          server_now: string;
+          status: string;
+        }[];
+      };
+      get_public_final_results: {
+        Args: Record<string, never>;
+        Returns: {
+          ballot_number: number | null;
+          candidate_id: string | null;
+          candidate_name: string | null;
+          candidate_photo_url: string | null;
+          election_term_label: string | null;
+          election_title: string | null;
+          is_tied_top: boolean;
+          is_top: boolean;
+          percentage: number;
+          school_logo_url: string | null;
+          school_name: string | null;
+          status: string;
+          total_valid_votes: number;
+          vote_count: number;
+        }[];
+      };
     };
     Enums: {
       app_role: "admin" | "committee" | "observer";
@@ -361,7 +399,8 @@ export type Database = {
         | "vote.cast"
         | "results.finalized"
         | "results.published"
-        | "results.unpublished";
+        | "results.unpublished"
+        | "results.announcement_started";
       election_status:
         | "draft"
         | "scheduled"

@@ -145,3 +145,13 @@ Fondasi pengelolaan kandidat sebelum fitur pemilih dan voting:
 - Finalisasi menyimpan `finalized_at` dan `finalized_by`, serta tidak menghitung ulang isi `votes`.
 - Setelah finalisasi, kandidat dan konfigurasi penting pemilihan tidak dapat diedit melalui UI.
 - Status siap diumumkan disimpan melalui `published_at`, tetapi fase ini belum membuat halaman publik hasil, countdown, atau animasi pengumuman.
+
+### Fase 11: Pengumuman Hasil Publik
+
+- Halaman `/admin/pengumuman` memulai momen pengumuman setelah election `closed`, hasil difinalisasi, dan `published_at` terisi.
+- Pengumuman hanya dapat dimulai sekali. Server menyimpan `announcement_started_at` dan `results_revealed_at`.
+- Halaman publik `/pengumuman` menampilkan layar tunggu, countdown 10 detik tersinkron dengan waktu server, lalu mengambil hasil final setelah waktu reveal tercapai.
+- Endpoint publik hasil hanya mengembalikan agregat kandidat setelah `results_revealed_at` terlewati.
+- Hasil publik menampilkan kandidat, jumlah suara, persentase, dan kandidat terpilih jika tidak seri.
+- Jika suara tertinggi seri, aplikasi tidak memilih pemenang tunggal otomatis.
+- Endpoint publik tidak mengembalikan data pemilih, sesi, token, atau hubungan pemilih dengan kandidat.

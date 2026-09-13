@@ -58,6 +58,8 @@ Kolom penting:
 - `results_visibility` untuk aturan publikasi hasil.
 - `published_at` dan `finalized_at` untuk fase hasil.
 - `finalized_by` untuk admin yang melakukan finalisasi hasil.
+- `announcement_started_at` untuk waktu admin memulai momen pengumuman.
+- `results_revealed_at` untuk waktu server saat hasil publik boleh dibuka.
 
 Lifecycle kotak suara:
 - `draft`: pemilihan masih dipersiapkan.
@@ -189,12 +191,35 @@ Finalisasi dan kontrol publikasi hasil:
 - `results.finalized` dicatat saat hasil difinalisasi.
 - `results.published` dicatat saat hasil ditandai siap diumumkan.
 - `results.unpublished` dicatat saat status siap diumumkan dibatalkan.
+- `results.announcement_started` dicatat saat countdown pengumuman publik dimulai.
 - Audit tidak mencatat identitas pemilih atau pasangan pemilih-kandidat.
 
 Penghitungan hasil:
 - Sumber hasil adalah agregasi langsung tabel `votes`.
 - Sebelum status election `closed`, perolehan kandidat tidak ditampilkan.
 - Setelah finalisasi, isi `votes` tidak dihitung ulang ke tabel snapshot pada fase ini.
+- Halaman publik hasil memakai `published_at` sebagai tanda siap diumumkan,
+  lalu `announcement_started_at` dan `results_revealed_at` sebagai kontrol
+  countdown. `results_revealed_at` ditetapkan server menjadi 10 detik setelah
+  pengumuman dimulai.
+
+### RPC Pengumuman Publik
+
+RPC `get_public_announcement_state`:
+- hanya mengembalikan status layar pengumuman, waktu server, identitas sekolah,
+  nama pemilihan, periode, `announcement_started_at`, dan `results_revealed_at`;
+- tidak mengembalikan jumlah suara, persentase, kandidat teratas, atau data
+  pemilih;
+- dipakai halaman `/pengumuman` untuk menampilkan layar tunggu atau countdown.
+
+RPC `get_public_final_results`:
+- hanya mengembalikan hasil jika election `closed`, `finalized_at` terisi,
+  `published_at` terisi, `results_revealed_at` terisi, dan waktu server sudah
+  melewati `results_revealed_at`;
+- melakukan agregasi hasil dari tabel `votes` server-side;
+- mengembalikan data kandidat dan agregat suara saja;
+- tidak mengembalikan `voter_id`, `voter_session_id`, `token_hash`, nama
+  pemilih, kelas pemilih, external id, atau waktu voting individual.
 
 ## RLS Awal
 
