@@ -40,7 +40,7 @@ export default async function AdminElectionSettingsPage() {
         </h2>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
           Tentukan nama kegiatan, periode kepengurusan, jadwal mulai dan
-          selesai, serta izin tampilan hasil setelah diumumkan.
+          selesai, tipe percobaan, serta izin tampilan hasil setelah diumumkan.
         </p>
       </div>
 

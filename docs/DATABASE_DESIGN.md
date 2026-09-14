@@ -60,6 +60,8 @@ Kolom penting:
 - `finalized_by` untuk admin yang melakukan finalisasi hasil.
 - `announcement_started_at` untuk waktu admin memulai momen pengumuman.
 - `results_revealed_at` untuk waktu server saat hasil publik boleh dibuka.
+- `archived_at` untuk menandai pemilihan lama yang sudah menjadi arsip.
+- `is_test` untuk memberi label pemilihan percobaan tanpa bypass keamanan.
 
 Lifecycle kotak suara:
 - `draft`: pemilihan masih dipersiapkan.
@@ -71,6 +73,15 @@ Lifecycle kotak suara:
 Status efektif dihitung oleh aplikasi server-side. Jika `ends_at` sudah
 terlewati, kotak suara dianggap tidak menerima suara walaupun status database
 masih `open`.
+
+Aturan current election:
+- Satu sekolah hanya boleh memiliki satu election yang `archived_at is null`.
+- Partial unique index `elections_one_current_per_school_idx` menegakkan aturan
+  tersebut di database.
+- Query aplikasi admin dan publik memakai election yang belum diarsipkan sebagai
+  current election.
+- Election yang sudah diarsipkan tetap menyimpan semua foreign key dan data
+  historis.
 
 ### `candidates`
 
@@ -192,6 +203,7 @@ Finalisasi dan kontrol publikasi hasil:
 - `results.published` dicatat saat hasil ditandai siap diumumkan.
 - `results.unpublished` dicatat saat status siap diumumkan dibatalkan.
 - `results.announcement_started` dicatat saat countdown pengumuman publik dimulai.
+- `election.archived` dicatat saat pemilihan selesai dipindahkan ke arsip.
 - Audit tidak mencatat identitas pemilih atau pasangan pemilih-kandidat.
 
 Penghitungan hasil:
@@ -208,6 +220,7 @@ Penghitungan hasil:
 RPC `get_public_announcement_state`:
 - hanya mengembalikan status layar pengumuman, waktu server, identitas sekolah,
   nama pemilihan, periode, `announcement_started_at`, dan `results_revealed_at`;
+- hanya memilih election yang belum diarsipkan;
 - tidak mengembalikan jumlah suara, persentase, kandidat teratas, atau data
   pemilih;
 - dipakai halaman `/pengumuman` untuk menampilkan layar tunggu atau countdown.
@@ -216,10 +229,26 @@ RPC `get_public_final_results`:
 - hanya mengembalikan hasil jika election `closed`, `finalized_at` terisi,
   `published_at` terisi, `results_revealed_at` terisi, dan waktu server sudah
   melewati `results_revealed_at`;
+- hanya memilih election yang belum diarsipkan;
 - melakukan agregasi hasil dari tabel `votes` server-side;
 - mengembalikan data kandidat dan agregat suara saja;
 - tidak mengembalikan `voter_id`, `voter_session_id`, `token_hash`, nama
   pemilih, kelas pemilih, external id, atau waktu voting individual.
+
+## Arsip Pemilihan
+
+Pemilihan dapat diarsipkan hanya setelah status database `closed` dan
+`finalized_at` terisi. Proses arsip:
+- mengisi `archived_at`;
+- mengubah status menjadi `archived`;
+- mencatat audit `election.archived`;
+- tidak menghapus atau mengubah `votes`, `candidates`, `voters`,
+  `voter_sessions`, atau `audit_logs`.
+
+Setelah current election diarsipkan, sekolah dapat membuat election baru dengan
+status `draft`. Election baru memakai identitas sekolah yang sama, tetapi tidak
+menyalin kandidat, pemilih, token, sesi, suara, finalisasi, atau pengumuman dari
+arsip lama.
 
 ## RLS Awal
 

@@ -100,6 +100,8 @@ export type Database = {
           finalized_by: string | null;
           announcement_started_at: string | null;
           results_revealed_at: string | null;
+          archived_at: string | null;
+          is_test: boolean;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -119,6 +121,8 @@ export type Database = {
           finalized_by?: string | null;
           announcement_started_at?: string | null;
           results_revealed_at?: string | null;
+          archived_at?: string | null;
+          is_test?: boolean;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -138,6 +142,8 @@ export type Database = {
           finalized_by?: string | null;
           announcement_started_at?: string | null;
           results_revealed_at?: string | null;
+          archived_at?: string | null;
+          is_test?: boolean;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -388,6 +394,7 @@ export type Database = {
         | "school.updated"
         | "election.created"
         | "election.updated"
+        | "election.archived"
         | "election.status_changed"
         | "candidate.created"
         | "candidate.updated"

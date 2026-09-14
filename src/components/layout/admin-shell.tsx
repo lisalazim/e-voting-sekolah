@@ -89,6 +89,12 @@ export function AdminShell({ adminName, children }: AdminShellProps) {
             >
               Pengumuman
             </Link>
+            <Link
+              className="block rounded-md px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              href="/admin/arsip-pemilihan"
+            >
+              Arsip Pemilihan
+            </Link>
           </nav>
         </aside>
 

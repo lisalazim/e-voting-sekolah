@@ -51,6 +51,22 @@ export function ElectionSettingsForm({ election, school }: ElectionSettingsFormP
           />
         </div>
 
+        <div className="space-y-2 sm:col-span-2">
+          <label
+            className="block text-sm font-medium text-slate-700"
+            htmlFor="description"
+          >
+            Deskripsi
+          </label>
+          <textarea
+            className="min-h-28 block w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-950 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+            defaultValue={election?.description ?? ""}
+            id="description"
+            name="description"
+            placeholder="Catatan singkat untuk panitia, opsional."
+          />
+        </div>
+
         <div className="space-y-2">
           <label className="block text-sm font-medium text-slate-700" htmlFor="startsAt">
             Tanggal dan jam mulai
@@ -91,6 +107,17 @@ export function ElectionSettingsForm({ election, school }: ElectionSettingsFormP
         <span>
           Hasil boleh ditampilkan setelah diumumkan oleh panitia.
         </span>
+      </label>
+
+      <label className="flex gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+        <input
+          className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-700"
+          defaultChecked={Boolean(election?.is_test)}
+          name="isTest"
+          type="checkbox"
+          value="true"
+        />
+        <span>Pemilihan Percobaan</span>
       </label>
 
       {state.message ? (

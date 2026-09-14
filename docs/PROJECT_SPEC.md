@@ -155,3 +155,14 @@ Fondasi pengelolaan kandidat sebelum fitur pemilih dan voting:
 - Hasil publik menampilkan kandidat, jumlah suara, persentase, dan kandidat terpilih jika tidak seri.
 - Jika suara tertinggi seri, aplikasi tidak memilih pemenang tunggal otomatis.
 - Endpoint publik tidak mengembalikan data pemilih, sesi, token, atau hubungan pemilih dengan kandidat.
+
+### Fase 11.5: Arsip Pemilihan dan Pemilihan Baru
+
+- Pemilihan `closed` tetap terminal dan tidak dapat dibuka kembali.
+- Admin dapat mengarsipkan pemilihan hanya jika statusnya `closed` dan hasilnya sudah difinalisasi.
+- Arsip menyimpan `archived_at` tanpa menghapus kandidat, pemilih, token, sesi, suara, audit log, atau hasil lama.
+- Satu sekolah hanya boleh memiliki satu pemilihan current yang belum diarsipkan.
+- Setelah pemilihan lama diarsipkan, admin dapat membuat pemilihan baru dengan status `draft`.
+- Pemilihan baru tidak menyalin kandidat, pemilih, token, sesi, suara, finalisasi, atau pengumuman dari arsip lama.
+- Pemilihan dapat ditandai sebagai `Pemilihan Percobaan` tanpa bypass keamanan.
+- Halaman `/admin/arsip-pemilihan` menampilkan arsip dan hasil agregat lama untuk admin sekolah terkait.

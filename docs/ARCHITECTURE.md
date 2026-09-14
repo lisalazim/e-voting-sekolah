@@ -117,6 +117,8 @@ Berisi route admin:
 - `/admin/kotak-suara` untuk kontrol status kotak suara.
 - `/admin/hasil` untuk penghitungan, finalisasi, dan status siap diumumkan.
 - `/admin/pengumuman` untuk memulai countdown pengumuman hasil publik.
+- `/admin/arsip-pemilihan` untuk membaca arsip pemilihan lama dan
+  mengarsipkan pemilihan current yang sudah selesai.
 
 ### `supabase/migrations`
 
@@ -227,6 +229,24 @@ Berisi migration SQL untuk schema database Supabase. Migration awal mendefinisik
   refresh halaman atau perangkat berbeda tidak memulai ulang hitungan.
 - Hasil publik tetap anonim: endpoint hanya mengembalikan data kandidat dan
   agregat suara, tanpa data pemilih, sesi, token, atau waktu voting individual.
+
+## Arsip Pemilihan Fase 11.5
+
+- Arsip pemilihan berada di `src/features/admin/election-archive`.
+- Query current election utama berada di `getAdminDashboardData` dan selalu
+  memakai `archived_at is null`.
+- Fitur kandidat, pemilih, token, kotak suara, hasil admin, dan pengumuman admin
+  berangkat dari current election tersebut, sehingga arsip lama tidak ikut
+  menjadi target operasi.
+- Halaman `/admin/arsip-pemilihan` membaca daftar election yang sudah memiliki
+  `archived_at` dan membatasi data ke `profiles.school_id` admin.
+- Action arsip memakai conditional update: status harus `closed`,
+  `finalized_at` harus terisi, dan `archived_at` masih null.
+- Pemilihan baru dibuat melalui form `/admin/pemilihan` sebagai `draft` setelah
+  tidak ada current election. Data kandidat, pemilih, token, sesi, suara,
+  finalisasi, dan pengumuman tidak disalin.
+- Halaman publik pengumuman dan RPC hasil publik mengabaikan election yang sudah
+  diarsipkan.
 
 ## Batasan Fase Pertama
 

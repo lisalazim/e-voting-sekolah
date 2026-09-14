@@ -86,6 +86,12 @@ export default async function AdminDashboardPage() {
             >
               Pengumuman
             </Link>
+            <Link
+              className="inline-flex min-h-10 items-center rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              href="/admin/arsip-pemilihan"
+            >
+              Arsip
+            </Link>
           </div>
         </div>
       </div>
@@ -98,6 +104,11 @@ export default async function AdminDashboardPage() {
               <p className="mt-2 text-lg font-semibold text-slate-950">
                 {data.election.title}
               </p>
+              {data.election.is_test ? (
+                <p className="mt-1 text-sm font-medium text-amber-700">
+                  Pemilihan Percobaan
+                </p>
+              ) : null}
             </div>
             <div>
               <p className="text-sm font-medium text-slate-500">

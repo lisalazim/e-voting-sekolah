@@ -32,9 +32,10 @@ export async function getAdminDashboardData(
   const { data: electionData } = await supabase
     .from("elections")
     .select(
-      "id, school_id, title, description, term_label, starts_at, ends_at, status, results_visibility, published_at, finalized_at, finalized_by, announcement_started_at, results_revealed_at, created_by, created_at, updated_at",
+      "id, school_id, title, description, term_label, starts_at, ends_at, status, results_visibility, published_at, finalized_at, finalized_by, announcement_started_at, results_revealed_at, archived_at, is_test, created_by, created_at, updated_at",
     )
     .eq("school_id", admin.profile.school_id)
+    .is("archived_at", null)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
