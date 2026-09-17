@@ -25,13 +25,7 @@ type TokenVoter = Pick<
 >;
 
 function canCreateTokens(election: AdminElection): boolean {
-  const startsAt = new Date(election.starts_at).getTime();
-
-  return (
-    (election.status === "draft" || election.status === "scheduled") &&
-    Number.isFinite(startsAt) &&
-    startsAt > Date.now()
-  );
+  return election.status === "draft" || election.status === "scheduled";
 }
 
 function getTokenBlockedMessage(election: AdminElection): string {
@@ -43,7 +37,7 @@ function getTokenBlockedMessage(election: AdminElection): string {
     return "Token tidak dapat dibuat setelah pemilihan selesai.";
   }
 
-  return "Token hanya dapat dibuat sebelum jadwal pemilihan dimulai.";
+  return "Token hanya dapat dibuat sebelum kotak suara dibuka.";
 }
 
 async function getTokenContext() {

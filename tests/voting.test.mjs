@@ -3,7 +3,11 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const votingMigration = readFileSync(
-  "supabase/migrations/20260913130000_create_voter_sessions_and_voting_rpc.sql",
+  "supabase/migrations/20260917110000_make_ballot_box_manual.sql",
+  "utf8",
+);
+const castVoteFixMigration = readFileSync(
+  "supabase/migrations/20260917120000_qualify_cast_vote_random_bytes.sql",
   "utf8",
 );
 const votingActions = readFileSync("src/features/voting/actions.ts", "utf8");
@@ -26,10 +30,53 @@ test("token invalid memakai pesan generik", () => {
   assert.doesNotMatch(votingActions, /token_hash.*message/);
 });
 
-test("RPC menolak election yang tidak efektif open", () => {
+test("error cast_vote dicatat aman dan tidak dikirim ke browser", () => {
+  assert.match(votingActions, /\[voting\.cast_vote\] Supabase RPC error/);
+  assert.match(votingActions, /code: sanitizeRpcErrorField\(error\.code\)/);
+  assert.match(votingActions, /message: sanitizeRpcErrorField\(error\.message\)/);
+  assert.match(votingActions, /details: sanitizeRpcErrorField\(error\.details\)/);
+  assert.match(votingActions, /hint: sanitizeRpcErrorField\(error\.hint\)/);
+  assert.match(votingActions, /\[REDACTED\]/);
+  assert.match(votingActions, /Suara belum bisa dicatat karena terjadi kesalahan pada server/);
+  assert.doesNotMatch(votingActions, /message:\s*error\.(?:message|details|hint)/);
+});
+
+test("error koneksi dibedakan dari error RPC database", () => {
+  assert.match(votingActions, /function isConnectionError/);
+  assert.match(votingActions, /failed to fetch/);
+  assert.match(votingActions, /Koneksi gagal\. Coba lagi beberapa saat\./);
+});
+
+test("signature dan parameter cast_vote konsisten", () => {
+  assert.match(votingMigration, /cast_vote\(\s*p_session_hash text,\s*p_candidate_id uuid\s*\)/);
+  assert.match(votingActions, /p_candidate_id: parsed\.data\.candidateId/);
+  assert.match(votingActions, /p_session_hash: sessionHash/);
+});
+
+test("cast_vote memakai gen_random_bytes dari schema extensions", () => {
+  assert.match(
+    castVoteFixMigration,
+    /cast_vote\(\s*p_session_hash text,\s*p_candidate_id uuid\s*\)/,
+  );
+  assert.match(
+    castVoteFixMigration,
+    /extensions\.gen_random_bytes\(32\)/,
+  );
+  assert.doesNotMatch(
+    castVoteFixMigration,
+    /(?<!extensions\.)gen_random_bytes\s*\(/,
+  );
+  assert.match(castVoteFixMigration, /security definer/);
+  assert.match(castVoteFixMigration, /set search_path = public/);
+  assert.doesNotMatch(castVoteFixMigration, /search_path\s*=\s*[^\n]*extensions/);
+});
+
+test("RPC hanya menerima election berstatus open yang aktif", () => {
   assert.match(votingMigration, /v_election_status <> 'open'/);
   assert.match(votingMigration, /v_election_status = 'paused'/);
-  assert.match(votingMigration, /now\(\) >= v_ends_at/);
+  assert.match(votingMigration, /v_archived_at is not null/);
+  assert.match(votingMigration, /v_finalized_at is not null/);
+  assert.doesNotMatch(votingMigration, /e\.starts_at|e\.ends_at|v_starts_at|v_ends_at/);
 });
 
 test("RPC menolak sesi kedaluwarsa", () => {

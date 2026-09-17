@@ -53,7 +53,8 @@ Status:
 - `archived`
 
 Kolom penting:
-- `starts_at` dan `ends_at` untuk jadwal.
+- `starts_at` dan `ends_at` adalah informasi jadwal lama yang nullable dan tidak
+  mengendalikan ketersediaan voting.
 - `term_label` untuk periode kepengurusan.
 - `results_visibility` untuk aturan publikasi hasil.
 - `published_at` dan `finalized_at` untuk fase hasil.
@@ -66,13 +67,13 @@ Kolom penting:
 Lifecycle kotak suara:
 - `draft`: pemilihan masih dipersiapkan.
 - `scheduled`: pemilihan siap tetapi kotak suara belum dibuka.
-- `open`: kotak suara dibuka selama jadwal masih berlaku.
+- `open`: kotak suara menerima login token dan suara sampai admin menjeda atau
+  menutupnya.
 - `paused`: kotak suara dijeda sementara.
 - `closed`: pemilihan selesai dan tidak dapat dibuka kembali melalui UI.
 
-Status efektif dihitung oleh aplikasi server-side. Jika `ends_at` sudah
-terlewati, kotak suara dianggap tidak menerima suara walaupun status database
-masih `open`.
+Ketersediaan voting ditentukan hanya oleh `elections.status`. Nilai waktu pada
+`starts_at` dan `ends_at` tidak membuka, menjeda, atau menutup kotak suara.
 
 Aturan current election:
 - Satu sekolah hanya boleh memiliki satu election yang `archived_at is null`.
@@ -177,7 +178,8 @@ RPC `cast_vote`:
 - memvalidasi `session_hash`;
 - mengunci baris sesi dan voter dengan `for update`;
 - menolak sesi terpakai/kedaluwarsa;
-- menolak election yang tidak `open`, dijeda, belum mulai, atau sudah lewat `ends_at`;
+- menolak election yang statusnya bukan `open`, sudah diarsipkan, atau sudah
+  difinalisasi;
 - memastikan kandidat aktif berasal dari election yang sama;
 - memastikan `voters.has_voted = false`;
 - memasukkan satu baris ke `votes` tanpa identitas pemilih;
@@ -204,6 +206,9 @@ Finalisasi dan kontrol publikasi hasil:
 - `results.unpublished` dicatat saat status siap diumumkan dibatalkan.
 - `results.announcement_started` dicatat saat countdown pengumuman publik dimulai.
 - `election.archived` dicatat saat pemilihan selesai dipindahkan ke arsip.
+- `election.test_deleted` dicatat sebelum arsip pemilihan percobaan dihapus
+  permanen. Metadata minimum memuat nama election, periode, waktu penghapusan,
+  ID admin, dan path foto untuk kebutuhan cleanup tanpa data pemilih atau token.
 - Audit tidak mencatat identitas pemilih atau pasangan pemilih-kandidat.
 
 Penghitungan hasil:
@@ -249,6 +254,24 @@ Setelah current election diarsipkan, sekolah dapat membuat election baru dengan
 status `draft`. Election baru memakai identitas sekolah yang sama, tetapi tidak
 menyalin kandidat, pemilih, token, sesi, suara, finalisasi, atau pengumuman dari
 arsip lama.
+
+### RPC Penghapusan Pemilihan Percobaan
+
+RPC `delete_archived_test_election` hanya dapat dieksekusi role database
+`authenticated`. Function memakai `SECURITY DEFINER` dengan `search_path`
+eksplisit dan tetap memverifikasi `auth.uid()` terhadap profil admin.
+
+RPC menolak election yang bukan milik sekolah admin, bukan percobaan, atau belum
+diarsipkan. Setelah baris election dikunci, audit sekolah disimpan dan child
+data dihapus berurutan: `voter_sessions`, `votes`, `voters`, `candidates`, lalu
+`elections`. Seluruh perubahan database berada dalam satu transaksi function.
+Baris `schools`, `profiles`, audit, current election, dan election lain tidak
+ikut dihapus.
+
+Path foto kandidat dikumpulkan sebelum kandidat dihapus dan dicatat pada audit.
+Setelah RPC sukses, aplikasi mencoba menghapus hanya path tersebut dari bucket
+`candidate-photos`. Kegagalan Storage tidak membatalkan penghapusan database dan
+ditampilkan sebagai peringatan cleanup kepada admin.
 
 ## RLS Awal
 

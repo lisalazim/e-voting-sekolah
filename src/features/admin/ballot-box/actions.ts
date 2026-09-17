@@ -6,15 +6,11 @@ import { z } from "zod";
 import { createSupabaseServerClient } from "../../../lib/supabase/server";
 import type { AdminFormState } from "../form-state";
 import { getAdminBallotBoxData } from "./queries";
-import {
-  getEffectiveElectionStatus,
-  getReadinessChecklist,
-  isReadyToOpen,
-} from "./status";
+import { getReadinessChecklist, isReadyToOpen } from "./status";
 import type { BallotBoxTransition, ElectionStatus } from "./types";
 
 const transitionSchema = z.object({
-  transition: z.enum(["schedule", "open", "pause", "resume", "close"]),
+  transition: z.enum(["open", "pause", "close"]),
 });
 
 type TransitionRule = {
@@ -25,24 +21,16 @@ type TransitionRule = {
 function getTransitionRule(transition: BallotBoxTransition): TransitionRule {
   const rules: Record<BallotBoxTransition, TransitionRule> = {
     close: {
-      allowedFrom: ["open"],
+      allowedFrom: ["open", "paused"],
       target: "closed",
     },
     open: {
-      allowedFrom: ["scheduled"],
+      allowedFrom: ["draft", "scheduled", "paused"],
       target: "open",
     },
     pause: {
       allowedFrom: ["open"],
       target: "paused",
-    },
-    resume: {
-      allowedFrom: ["paused"],
-      target: "open",
-    },
-    schedule: {
-      allowedFrom: ["draft"],
-      target: "scheduled",
     },
   };
 
@@ -54,8 +42,6 @@ function getTransitionSuccessMessage(transition: BallotBoxTransition): string {
     close: "Kotak suara berhasil ditutup.",
     open: "Kotak suara berhasil dibuka.",
     pause: "Pemilihan berhasil dijeda.",
-    resume: "Pemilihan berhasil dilanjutkan.",
-    schedule: "Pemilihan berhasil dijadwalkan.",
   };
 
   return messages[transition];
@@ -66,8 +52,6 @@ function getTransitionErrorMessage(transition: BallotBoxTransition): string {
     close: "Kotak suara belum bisa ditutup.",
     open: "Kotak suara belum bisa dibuka.",
     pause: "Pemilihan belum bisa dijeda.",
-    resume: "Pemilihan belum bisa dilanjutkan.",
-    schedule: "Pemilihan belum bisa dijadwalkan.",
   };
 
   return messages[transition];
@@ -108,11 +92,7 @@ export async function updateBallotBoxStatus(
     };
   }
 
-  const effectiveStatus = getEffectiveElectionStatus(data.election);
   const rule = getTransitionRule(transition);
-  const now = Date.now();
-  const startsAt = new Date(data.election.starts_at).getTime();
-  const endsAt = new Date(data.election.ends_at).getTime();
 
   if (data.election.status === "closed" || data.election.status === "archived") {
     return {
@@ -121,27 +101,18 @@ export async function updateBallotBoxStatus(
     };
   }
 
+  if (data.election.finalized_at || data.election.archived_at) {
+    return {
+      status: "error",
+      message: "Pemilihan yang sudah difinalisasi atau diarsipkan tidak dapat diubah.",
+    };
+  }
+
   if (!rule.allowedFrom.includes(data.election.status)) {
     return {
       status: "error",
       message: getTransitionErrorMessage(transition),
     };
-  }
-
-  if (transition === "schedule") {
-    if (!Number.isFinite(startsAt) || !Number.isFinite(endsAt) || endsAt <= startsAt) {
-      return {
-        status: "error",
-        message: "Jadwal mulai dan selesai belum valid.",
-      };
-    }
-
-    if (endsAt <= now) {
-      return {
-        status: "error",
-        message: "Pemilihan tidak dapat dijadwalkan karena waktu selesai sudah terlewati.",
-      };
-    }
   }
 
   if (transition === "open") {
@@ -155,13 +126,6 @@ export async function updateBallotBoxStatus(
     }
   }
 
-  if ((transition === "pause" || transition === "resume") && effectiveStatus === "closed") {
-    return {
-      status: "error",
-      message: "Pemilihan sudah melewati waktu selesai. Tutup kotak suara.",
-    };
-  }
-
   const { data: updatedElection, error } = await supabase
     .from("elections")
     .update({
@@ -169,6 +133,8 @@ export async function updateBallotBoxStatus(
     })
     .eq("id", data.election.id)
     .eq("school_id", data.school.id)
+    .is("archived_at", null)
+    .is("finalized_at", null)
     .in("status", rule.allowedFrom)
     .select("id, status")
     .maybeSingle();

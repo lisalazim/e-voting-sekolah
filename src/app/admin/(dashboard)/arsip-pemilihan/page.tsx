@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { ArchiveElectionButton } from "../../../../features/admin/election-archive/archive-election-button";
+import { DeleteElectionDialog } from "../../../../features/admin/election-archive/delete-election-dialog";
 import { getAdminElectionArchiveData } from "../../../../features/admin/election-archive/queries";
 import { createSupabaseServerClient } from "../../../../lib/supabase/server";
 import { formatDateTimeForZone } from "../../../../utils/date-time";
@@ -155,6 +156,16 @@ export default async function AdminElectionArchivePage() {
                   {getStatusLabel(election.status)}
                 </span>
               </div>
+
+              {election.is_test ? (
+                <div className="mt-4 border-t border-slate-200 pt-4">
+                  <DeleteElectionDialog
+                    electionId={election.id}
+                    electionTitle={election.title}
+                    termLabel={election.term_label}
+                  />
+                </div>
+              ) : null}
 
               <div className="mt-5 grid gap-3 sm:grid-cols-4">
                 <SummaryCard label="Pemilih" value={election.summary.totalVoters} />

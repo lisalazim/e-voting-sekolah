@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { createSupabaseServerClient } from "../../../lib/supabase/server";
-import { localDateTimeToIso } from "../../../utils/date-time";
 import { getCurrentAdmin } from "../auth/queries";
 import type { AdminFormState } from "../form-state";
 import type { AdminSchool } from "../dashboard/queries";
@@ -16,10 +15,8 @@ const electionSettingsSchema = z.object({
     .max(600, "Deskripsi terlalu panjang.")
     .optional(),
   electionId: z.string().uuid().optional().or(z.literal("")),
-  endsAt: z.string().trim().min(1, "Tanggal dan jam selesai wajib diisi."),
   isTest: z.boolean(),
   resultsVisibility: z.enum(["private", "public"]),
-  startsAt: z.string().trim().min(1, "Tanggal dan jam mulai wajib diisi."),
   termLabel: z
     .string()
     .trim()
@@ -39,10 +36,8 @@ export async function saveElectionSettings(
   const parsed = electionSettingsSchema.safeParse({
     description: formData.get("description"),
     electionId: formData.get("electionId") ?? "",
-    endsAt: formData.get("endsAt"),
     isTest: formData.get("isTest") === "true",
     resultsVisibility: formData.get("resultsVisibility") === "public" ? "public" : "private",
-    startsAt: formData.get("startsAt"),
     termLabel: formData.get("termLabel"),
     title: formData.get("title"),
   });
@@ -78,22 +73,10 @@ export async function saveElectionSettings(
     };
   }
 
-  const startsAt = localDateTimeToIso(parsed.data.startsAt, school.timezone);
-  const endsAt = localDateTimeToIso(parsed.data.endsAt, school.timezone);
-
-  if (new Date(endsAt).getTime() <= new Date(startsAt).getTime()) {
-    return {
-      status: "error",
-      message: "Waktu selesai harus lebih akhir daripada waktu mulai.",
-    };
-  }
-
   const payload = {
     description: parsed.data.description || null,
-    ends_at: endsAt,
     is_test: parsed.data.isTest,
     results_visibility: parsed.data.resultsVisibility,
-    starts_at: startsAt,
     term_label: parsed.data.termLabel,
     title: parsed.data.title,
   };

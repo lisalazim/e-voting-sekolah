@@ -1,6 +1,12 @@
 export type UserRole = "admin" | "committee" | "observer";
 
-export type ElectionStatus = "draft" | "scheduled" | "open" | "closed" | "archived";
+export type ElectionStatus =
+  | "draft"
+  | "scheduled"
+  | "open"
+  | "paused"
+  | "closed"
+  | "archived";
 
 export type ResultsVisibility = "private" | "committee" | "public";
 

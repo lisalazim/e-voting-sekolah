@@ -76,7 +76,8 @@ Fondasi awal fase ketiga:
 Fondasi pengaturan sebelum fitur voting:
 
 - Halaman `/admin/pengaturan` untuk nama sekolah, slug sekolah, zona waktu, dan nama admin/pengelola.
-- Halaman `/admin/pemilihan` untuk nama kegiatan, periode kepengurusan, jadwal mulai, jadwal selesai, dan izin tampilan hasil setelah diumumkan.
+- Halaman `/admin/pemilihan` untuk nama kegiatan, periode kepengurusan, tipe
+  pemilihan, dan izin tampilan hasil setelah diumumkan.
 - Dashboard `/admin` menampilkan ringkasan sekolah dan kegiatan pemilihan.
 - Belum membuat kandidat, pemilih, impor Excel, voting, penghitungan, atau pengumuman hasil.
 
@@ -111,7 +112,7 @@ Fondasi pengelolaan kandidat sebelum fitur pemilih dan voting:
 - Token asli hanya ditampilkan satu kali setelah dibuat atau diregenerasi.
 - Database hanya menyimpan `token_hash`, bukan token asli.
 - Hash token memakai HMAC-SHA-256 dengan secret server-only `VOTER_TOKEN_PEPPER`.
-- Token tidak boleh dibuat setelah pemilihan dibuka atau jadwal mulai tercapai.
+- Token tidak boleh dibuat setelah kotak suara dibuka.
 - Belum membuat login pemilih, proses voting, hasil, atau mode pengumuman.
 
 ### Fase 8: Kontrol Kotak Suara
@@ -119,8 +120,10 @@ Fondasi pengelolaan kandidat sebelum fitur pemilih dan voting:
 - Halaman `/admin/kotak-suara` mengontrol lifecycle kotak suara.
 - Alur status pemilihan: `draft -> scheduled -> open -> paused -> open -> closed`.
 - Status `closed` bersifat terminal dan tidak dapat dibuka kembali melalui UI.
-- Kotak suara hanya dapat dibuka jika jadwal valid, waktu selesai belum terlewati, minimal dua kandidat aktif, terdapat pemilih, dan seluruh pemilih memiliki token.
-- Status efektif dihitung di server; jika jadwal selesai sudah terlewati, kotak suara dianggap tidak menerima suara walaupun status database masih `open`.
+- Kotak suara hanya dapat dibuka jika minimal dua kandidat aktif, terdapat
+  pemilih, dan seluruh pemilih memiliki token.
+- Status kotak suara dikendalikan manual oleh admin dan ditentukan langsung dari
+  `elections.status`.
 - Fase ini belum membuat login pemilih, penyimpanan suara, penghitungan hasil, atau pengumuman.
 
 ### Fase 9: Login Token dan Pemberian Suara
@@ -166,3 +169,32 @@ Fondasi pengelolaan kandidat sebelum fitur pemilih dan voting:
 - Pemilihan baru tidak menyalin kandidat, pemilih, token, sesi, suara, finalisasi, atau pengumuman dari arsip lama.
 - Pemilihan dapat ditandai sebagai `Pemilihan Percobaan` tanpa bypass keamanan.
 - Halaman `/admin/arsip-pemilihan` menampilkan arsip dan hasil agregat lama untuk admin sekolah terkait.
+
+### Fase 11.6: Penghapusan Pemilihan Percobaan
+
+- Hanya election dengan `is_test = true` dan `archived_at` terisi yang dapat
+  dihapus permanen oleh admin sekolah pemiliknya.
+- Election current dan pemilihan sungguhan tidak dapat dihapus melalui UI atau
+  RPC penghapusan.
+- Admin wajib mengetik `HAPUS` sebelum mengonfirmasi penghapusan permanen.
+- RPC menghapus sesi pemilih, suara, pemilih, kandidat, dan election dalam satu
+  transaksi database.
+- Audit `election.test_deleted` disimpan pada tingkat sekolah sebelum election
+  dihapus dan tidak memuat token atau identitas pemilih.
+- Foto kandidat dibersihkan dari bucket setelah transaksi database berhasil.
+  Path foto dicatat pada audit agar kegagalan cleanup dapat ditangani admin.
+- Fitur ini tidak menambahkan reset dan tidak membuka kembali election
+  `closed`.
+
+### Fase 11.6: Kendali Manual Kotak Suara
+
+- Ketersediaan voting ditentukan hanya oleh `elections.status`, bukan
+  `starts_at`, `ends_at`, waktu server, atau zona waktu.
+- Admin dapat menjalankan transisi `draft -> open`, `scheduled -> open` untuk
+  data lama, `open -> paused`, `paused -> open`, serta `open/paused -> closed`.
+- Status `closed` tetap terminal. Election yang sudah difinalisasi atau
+  diarsipkan tidak dapat dibuka atau diubah statusnya.
+- Jadwal lama tetap dapat dibaca sebagai informasi historis, tetapi kolomnya
+  opsional dan tidak ditampilkan pada form pengaturan pemilihan.
+- Login token, konteks kandidat, dan RPC pemberian suara hanya menerima election
+  berstatus tepat `open`, belum diarsipkan, dan belum difinalisasi.

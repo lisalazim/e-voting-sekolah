@@ -3,10 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getAdminDashboardData } from "../../../features/admin/dashboard/queries";
-import {
-  getEffectiveElectionStatus,
-  getElectionStatusLabel,
-} from "../../../features/admin/ballot-box/status";
+import { getElectionStatusLabel } from "../../../features/admin/ballot-box/status";
 import { createSupabaseServerClient } from "../../../lib/supabase/server";
 import { formatDateTimeForZone } from "../../../utils/date-time";
 
@@ -61,7 +58,7 @@ export default async function AdminDashboardPage() {
           <p className="text-sm font-medium text-slate-500">Status pemilihan</p>
           <h3 className="mt-2 text-xl font-semibold text-slate-950">
             {data.election
-              ? getElectionStatusLabel(getEffectiveElectionStatus(data.election))
+              ? getElectionStatusLabel(data.election.status)
               : "Belum dibuat"}
           </h3>
           <p className="mt-2 text-sm text-slate-600">
@@ -119,13 +116,17 @@ export default async function AdminDashboardPage() {
               </p>
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-500">Mulai</p>
+              <p className="text-sm font-medium text-slate-500">
+                Informasi jadwal mulai
+              </p>
               <p className="mt-2 text-base text-slate-950">
                 {formatDateTimeForZone(data.election.starts_at, timeZone)}
               </p>
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-500">Selesai</p>
+              <p className="text-sm font-medium text-slate-500">
+                Informasi jadwal selesai
+              </p>
               <p className="mt-2 text-base text-slate-950">
                 {formatDateTimeForZone(data.election.ends_at, timeZone)}
               </p>
@@ -138,8 +139,8 @@ export default async function AdminDashboardPage() {
             Kegiatan pemilihan belum dibuat
           </h3>
           <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-600">
-            Buat kegiatan pemilihan untuk menentukan nama kegiatan, periode
-            kepengurusan, jadwal mulai, dan jadwal selesai.
+            Buat kegiatan pemilihan untuk menentukan nama kegiatan dan periode
+            kepengurusan. Kotak suara kemudian dibuka secara manual oleh admin.
           </p>
           <Link
             className="mt-5 inline-flex min-h-10 items-center rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800"

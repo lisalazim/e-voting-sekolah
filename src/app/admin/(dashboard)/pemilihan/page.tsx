@@ -39,13 +39,14 @@ export default async function AdminElectionSettingsPage() {
           Pengaturan Pemilihan
         </h2>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-          Tentukan nama kegiatan, periode kepengurusan, jadwal mulai dan
-          selesai, tipe percobaan, serta izin tampilan hasil setelah diumumkan.
+          Tentukan nama kegiatan, periode kepengurusan, tipe percobaan, serta
+          izin tampilan hasil setelah diumumkan. Kotak suara dikendalikan manual
+          dari halaman Kotak Suara.
         </p>
       </div>
 
       <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <ElectionSettingsForm election={data.election} school={data.school} />
+        <ElectionSettingsForm election={data.election} />
       </div>
     </section>
   );

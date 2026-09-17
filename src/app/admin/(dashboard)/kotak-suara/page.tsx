@@ -6,8 +6,6 @@ import { BallotBoxControls } from "../../../../features/admin/ballot-box/ballot-
 import { getAdminBallotBoxData } from "../../../../features/admin/ballot-box/queries";
 import {
   getDatabaseStatusLabel,
-  getEffectiveElectionStatus,
-  getElectionStatusLabel,
   getReadinessChecklist,
   isReadyToOpen,
 } from "../../../../features/admin/ballot-box/status";
@@ -52,7 +50,6 @@ export default async function AdminBallotBoxPage() {
   }
 
   const timeZone = data.school.timezone;
-  const effectiveStatus = getEffectiveElectionStatus(data.election);
   const checklist = getReadinessChecklist(data.election, data.summary);
   const readyToOpen = isReadyToOpen(checklist);
   const summaryItems = [
@@ -95,13 +92,10 @@ export default async function AdminBallotBoxPage() {
           </div>
           <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3">
             <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
-              Status efektif
+              Status kotak suara
             </p>
             <p className="mt-1 text-lg font-semibold text-slate-950">
-              {getElectionStatusLabel(effectiveStatus)}
-            </p>
-            <p className="mt-1 text-xs text-slate-500">
-              Database: {getDatabaseStatusLabel(data.election.status)}
+              {getDatabaseStatusLabel(data.election.status)}
             </p>
           </div>
         </div>
@@ -109,7 +103,9 @@ export default async function AdminBallotBoxPage() {
 
       <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <h3 className="text-lg font-semibold text-slate-950">Jadwal</h3>
+          <h3 className="text-lg font-semibold text-slate-950">
+            Informasi jadwal (tidak mengendalikan kotak suara)
+          </h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
               <p className="text-sm font-medium text-slate-500">Mulai</p>
@@ -124,12 +120,6 @@ export default async function AdminBallotBoxPage() {
               </p>
             </div>
           </div>
-          {data.election.status === "open" && effectiveStatus === "closed" ? (
-            <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-              Waktu selesai sudah terlewati. Walaupun status database masih
-              dibuka, kotak suara harus dianggap tidak menerima suara.
-            </p>
-          ) : null}
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
@@ -187,7 +177,6 @@ export default async function AdminBallotBoxPage() {
         <div className="mt-5">
           <BallotBoxControls
             databaseStatus={data.election.status}
-            effectiveStatus={effectiveStatus}
             isReadyToOpen={readyToOpen}
           />
         </div>

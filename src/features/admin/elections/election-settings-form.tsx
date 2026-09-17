@@ -2,17 +2,15 @@
 
 import { useActionState } from "react";
 
-import { toDateTimeLocalValue } from "../../../utils/date-time";
-import type { AdminElection, AdminSchool } from "../dashboard/queries";
+import type { AdminElection } from "../dashboard/queries";
 import { initialAdminFormState } from "../form-state";
 import { saveElectionSettings } from "./actions";
 
 type ElectionSettingsFormProps = {
   election: AdminElection | null;
-  school: AdminSchool;
 };
 
-export function ElectionSettingsForm({ election, school }: ElectionSettingsFormProps) {
+export function ElectionSettingsForm({ election }: ElectionSettingsFormProps) {
   const [state, formAction, isPending] = useActionState(
     saveElectionSettings,
     initialAdminFormState,
@@ -67,33 +65,6 @@ export function ElectionSettingsForm({ election, school }: ElectionSettingsFormP
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-700" htmlFor="startsAt">
-            Tanggal dan jam mulai
-          </label>
-          <input
-            className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-950 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-            defaultValue={toDateTimeLocalValue(election?.starts_at ?? null, school.timezone)}
-            id="startsAt"
-            name="startsAt"
-            required
-            type="datetime-local"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-700" htmlFor="endsAt">
-            Tanggal dan jam selesai
-          </label>
-          <input
-            className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-950 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-            defaultValue={toDateTimeLocalValue(election?.ends_at ?? null, school.timezone)}
-            id="endsAt"
-            name="endsAt"
-            required
-            type="datetime-local"
-          />
-        </div>
       </div>
 
       <label className="flex gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">

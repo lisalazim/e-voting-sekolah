@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 import { createSupabaseServerClient } from "../../../lib/supabase/server";
 import type { AdminFormState } from "../form-state";
 import { getAdminDashboardData } from "../dashboard/queries";
+import { CANDIDATE_PHOTO_BUCKET } from "../candidates/storage";
 
 export async function archiveCurrentElection(
   _previousState: AdminFormState,
@@ -88,5 +90,77 @@ export async function archiveCurrentElection(
   return {
     status: "success",
     message: "Pemilihan berhasil diarsipkan tanpa menghapus data lama.",
+  };
+}
+
+export async function deleteArchivedTestElection(
+  _previousState: AdminFormState,
+  formData: FormData,
+): Promise<AdminFormState> {
+  void _previousState;
+
+  if (formData.get("confirmation") !== "HAPUS") {
+    return {
+      status: "error",
+      message: "Ketik HAPUS untuk mengonfirmasi penghapusan permanen.",
+    };
+  }
+
+  const parsedElectionId = z.string().uuid().safeParse(formData.get("electionId"));
+
+  if (!parsedElectionId.success) {
+    return {
+      status: "error",
+      message: "Pemilihan tidak valid.",
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.rpc("delete_archived_test_election", {
+    p_election_id: parsedElectionId.data,
+  });
+  const result = data?.[0];
+
+  if (error || !result) {
+    return {
+      status: "error",
+      message: "Pemilihan percobaan belum dapat dihapus. Coba lagi.",
+    };
+  }
+
+  const statusMessages: Record<string, string> = {
+    forbidden: "Anda tidak memiliki izin untuk menghapus pemilihan ini.",
+    not_archived: "Hanya pemilihan yang sudah diarsipkan yang dapat dihapus.",
+    not_found: "Pemilihan tidak ditemukan pada sekolah Anda.",
+    not_test: "Pemilihan sungguhan tidak dapat dihapus permanen.",
+  };
+
+  if (result.status !== "success") {
+    return {
+      status: "error",
+      message: statusMessages[result.status] ?? "Pemilihan tidak dapat dihapus.",
+    };
+  }
+
+  const photoPaths = result.candidate_photo_paths ?? [];
+  let cleanupWarning = "";
+
+  if (photoPaths.length > 0) {
+    const { error: storageError } = await supabase.storage
+      .from(CANDIDATE_PHOTO_BUCKET)
+      .remove(photoPaths);
+
+    if (storageError) {
+      cleanupWarning =
+        " Database sudah dihapus, tetapi sebagian foto belum berhasil dibersihkan. Path cleanup telah dicatat pada audit log.";
+    }
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/arsip-pemilihan");
+
+  return {
+    status: "success",
+    message: `Pemilihan percobaan berhasil dihapus permanen.${cleanupWarning}`,
   };
 }

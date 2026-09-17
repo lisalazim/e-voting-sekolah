@@ -24,6 +24,41 @@ const voteSchema = z.object({
   candidateId: z.string().uuid("Pilih kandidat terlebih dahulu."),
 });
 
+type SupabaseRpcError = {
+  code?: string | null;
+  details?: string | null;
+  hint?: string | null;
+  message?: string | null;
+};
+
+const sensitiveIdentifierPattern =
+  /\b(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|[0-9a-f]{64})\b/gi;
+
+function sanitizeRpcErrorField(value: string | null | undefined): string | null {
+  return value ? value.replace(sensitiveIdentifierPattern, "[REDACTED]") : null;
+}
+
+function isConnectionError(error: SupabaseRpcError): boolean {
+  const message = error.message?.toLowerCase() ?? "";
+
+  return (
+    message.includes("failed to fetch") ||
+    message.includes("fetch failed") ||
+    message.includes("network") ||
+    message.includes("socket") ||
+    message.includes("econn")
+  );
+}
+
+function logCastVoteRpcError(error: SupabaseRpcError): void {
+  console.error("[voting.cast_vote] Supabase RPC error", {
+    code: sanitizeRpcErrorField(error.code),
+    details: sanitizeRpcErrorField(error.details),
+    hint: sanitizeRpcErrorField(error.hint),
+    message: sanitizeRpcErrorField(error.message),
+  });
+}
+
 function getLoginMessage(status: string): string {
   if (status === "already_voted") {
     return "Token tidak valid atau tidak dapat digunakan.";
@@ -125,9 +160,13 @@ export async function submitVote(
   });
 
   if (error) {
+    logCastVoteRpcError(error);
+
     return {
       status: "error",
-      message: "Koneksi gagal. Coba lagi beberapa saat.",
+      message: isConnectionError(error)
+        ? "Koneksi gagal. Coba lagi beberapa saat."
+        : "Suara belum bisa dicatat karena terjadi kesalahan pada server.",
     };
   }
 

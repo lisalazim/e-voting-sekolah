@@ -183,13 +183,15 @@ Berisi migration SQL untuk schema database Supabase. Migration awal mendefinisik
 ## Kontrol Kotak Suara Fase Kedelapan
 
 - Kontrol kotak suara berada di `src/features/admin/ballot-box`.
-- Helper status efektif berada di `src/features/admin/ballot-box/status.ts`.
+- Label status dan checklist kesiapan berada di
+  `src/features/admin/ballot-box/status.ts`.
 - Query ringkasan kotak suara berada di `src/features/admin/ballot-box/queries.ts`.
 - Server Action transisi status berada di `src/features/admin/ballot-box/actions.ts`.
 - Lifecycle UI mengikuti `draft -> scheduled -> open -> paused -> open -> closed`.
 - Status `closed` tidak dapat dibuka kembali melalui UI.
 - Server Action selalu membaca status database terkini, memverifikasi admin dan sekolah, lalu memakai conditional update agar permintaan bersamaan tidak menghasilkan transisi yang salah.
-- Status efektif dihitung server-side agar status database `open` tetap dianggap tidak menerima suara setelah `ends_at` terlewati.
+- Ketersediaan kotak suara ditentukan server-side hanya dari status database.
+  Jadwal tidak mengubah status dan tidak memblokir voting.
 - Fase ini belum membuat login pemilih, penerimaan suara, hasil kandidat, atau pengumuman.
 
 ## Voting Publik Fase Kesembilan
@@ -200,7 +202,7 @@ Berisi migration SQL untuk schema database Supabase. Migration awal mendefinisik
 - Kandidat aktif dibaca melalui RPC `get_voting_context`, bukan query client langsung ke tabel admin.
 - Token mentah hanya diterima oleh Server Action login, lalu langsung dinormalisasi dan di-hash. Token mentah tidak masuk URL, localStorage, sessionStorage, audit log, atau database.
 - Cookie pemilih hanya menyimpan secret sesi acak HttpOnly. Cookie tidak berisi `voter_id`, `token_hash`, token mentah, atau pilihan kandidat.
-- Boundary kepercayaan ada di server dan database: browser hanya mengirim token saat login dan `candidate_id` saat submit, sedangkan election, voter, session, dan status efektif ditentukan ulang oleh server/RPC.
+- Boundary kepercayaan ada di server dan database: browser hanya mengirim token saat login dan `candidate_id` saat submit, sedangkan election, voter, session, dan status database ditentukan ulang oleh server/RPC.
 - RPC `cast_vote` menjalankan validasi sesi, locking sesi dan voter, validasi election, validasi kandidat, insert suara anonim, update `has_voted`, dan penandaan sesi terpakai dalam satu transaksi database.
 - Fase ini tidak membuat hasil, grafik, atau pengumuman.
 
@@ -247,6 +249,25 @@ Berisi migration SQL untuk schema database Supabase. Migration awal mendefinisik
   finalisasi, dan pengumuman tidak disalin.
 - Halaman publik pengumuman dan RPC hasil publik mengabaikan election yang sudah
   diarsipkan.
+
+## Penghapusan Arsip Percobaan Fase 11.6
+
+- Dialog penghapusan berada di
+  `src/features/admin/election-archive/delete-election-dialog.tsx` dan hanya
+  dirender untuk arsip dengan `is_test = true`.
+- Server Action `deleteArchivedTestElection` memvalidasi UUID lalu memanggil
+  RPC dengan session Supabase admin; browser tidak mengirim `school_id`.
+- RPC `delete_archived_test_election` mengunci election, mengambil sekolah dari
+  profil `auth.uid()`, lalu memverifikasi role admin, `is_test`, dan
+  `archived_at` sebelum menghapus data.
+- Penghapusan `voter_sessions`, `votes`, `voters`, `candidates`, dan `elections`
+  terjadi dalam satu transaksi RPC. Sekolah, profil, election lain, serta audit
+  sekolah tidak menjadi target penghapusan.
+- RPC mengembalikan path foto kandidat yang sudah dikumpulkan sebelum delete.
+  Server Action kemudian membersihkan hanya object tersebut dari bucket
+  `candidate-photos`.
+- RPC hanya diberikan kepada role database `authenticated`; akses `anon` dan
+  `public` dicabut.
 
 ## Batasan Fase Pertama
 

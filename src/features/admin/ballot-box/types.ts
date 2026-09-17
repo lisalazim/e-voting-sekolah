@@ -2,20 +2,7 @@ import type { Database } from "../../../types/database";
 
 export type ElectionStatus = Database["public"]["Enums"]["election_status"];
 
-export type EffectiveElectionStatus =
-  | "draft"
-  | "scheduled"
-  | "open"
-  | "paused"
-  | "closed"
-  | "archived";
-
-export type BallotBoxTransition =
-  | "schedule"
-  | "open"
-  | "pause"
-  | "resume"
-  | "close";
+export type BallotBoxTransition = "open" | "pause" | "close";
 
 export type BallotBoxSummary = {
   activeCandidateCount: number;

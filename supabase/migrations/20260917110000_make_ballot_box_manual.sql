@@ -1,0 +1,359 @@
+alter table public.elections
+alter column starts_at drop not null,
+alter column ends_at drop not null;
+
+create or replace function public.create_voter_session(
+  p_token_hash text,
+  p_session_hash text,
+  p_expires_at timestamptz
+)
+returns table (status text)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_archived_at timestamptz;
+  v_election_id uuid;
+  v_election_status public.election_status;
+  v_finalized_at timestamptz;
+  v_has_voted boolean;
+  v_voter_id uuid;
+begin
+  select
+    v.id,
+    v.election_id,
+    v.has_voted,
+    e.status,
+    e.archived_at,
+    e.finalized_at
+  into
+    v_voter_id,
+    v_election_id,
+    v_has_voted,
+    v_election_status,
+    v_archived_at,
+    v_finalized_at
+  from public.voters v
+  join public.elections e on e.id = v.election_id
+  where v.token_hash = p_token_hash
+  limit 1;
+
+  if v_voter_id is null then
+    return query select 'invalid_token'::text;
+    return;
+  end if;
+
+  if v_has_voted then
+    return query select 'already_voted'::text;
+    return;
+  end if;
+
+  if v_election_status = 'paused' then
+    return query select 'paused'::text;
+    return;
+  end if;
+
+  if v_election_status = 'closed' then
+    return query select 'closed'::text;
+    return;
+  end if;
+
+  if v_election_status <> 'open'
+    or v_archived_at is not null
+    or v_finalized_at is not null then
+    return query select 'not_open'::text;
+    return;
+  end if;
+
+  insert into public.voter_sessions (
+    election_id,
+    voter_id,
+    session_hash,
+    expires_at
+  )
+  values (
+    v_election_id,
+    v_voter_id,
+    p_session_hash,
+    p_expires_at
+  );
+
+  return query select 'success'::text;
+end;
+$$;
+
+create or replace function public.get_voting_context(
+  p_session_hash text
+)
+returns table (
+  status text,
+  election_title text,
+  election_term_label text,
+  candidate_id uuid,
+  ballot_number integer,
+  candidate_name text,
+  candidate_class_name text,
+  candidate_photo_url text,
+  candidate_vision text,
+  candidate_mission text
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_archived_at timestamptz;
+  v_election_id uuid;
+  v_election_status public.election_status;
+  v_expires_at timestamptz;
+  v_finalized_at timestamptz;
+  v_has_voted boolean;
+  v_term_label text;
+  v_title text;
+  v_used_at timestamptz;
+begin
+  select
+    s.election_id,
+    s.expires_at,
+    s.used_at,
+    v.has_voted,
+    e.status,
+    e.archived_at,
+    e.finalized_at,
+    e.title,
+    e.term_label
+  into
+    v_election_id,
+    v_expires_at,
+    v_used_at,
+    v_has_voted,
+    v_election_status,
+    v_archived_at,
+    v_finalized_at,
+    v_title,
+    v_term_label
+  from public.voter_sessions s
+  join public.voters v on v.id = s.voter_id and v.election_id = s.election_id
+  join public.elections e on e.id = s.election_id
+  where s.session_hash = p_session_hash
+  limit 1;
+
+  if v_election_id is null then
+    return query select 'session_invalid'::text, null::text, null::text, null::uuid, null::integer, null::text, null::text, null::text, null::text, null::text;
+    return;
+  end if;
+
+  if v_used_at is not null or v_has_voted then
+    return query select 'already_voted'::text, null::text, null::text, null::uuid, null::integer, null::text, null::text, null::text, null::text, null::text;
+    return;
+  end if;
+
+  if v_expires_at <= now() then
+    return query select 'session_expired'::text, null::text, null::text, null::uuid, null::integer, null::text, null::text, null::text, null::text, null::text;
+    return;
+  end if;
+
+  if v_election_status = 'paused' then
+    return query select 'paused'::text, null::text, null::text, null::uuid, null::integer, null::text, null::text, null::text, null::text, null::text;
+    return;
+  end if;
+
+  if v_election_status = 'closed' then
+    return query select 'closed'::text, null::text, null::text, null::uuid, null::integer, null::text, null::text, null::text, null::text, null::text;
+    return;
+  end if;
+
+  if v_election_status <> 'open'
+    or v_archived_at is not null
+    or v_finalized_at is not null then
+    return query select 'not_open'::text, null::text, null::text, null::uuid, null::integer, null::text, null::text, null::text, null::text, null::text;
+    return;
+  end if;
+
+  return query
+  select
+    'success'::text,
+    v_title,
+    v_term_label,
+    c.id,
+    c.ballot_number,
+    c.name,
+    c.class_name,
+    c.photo_url,
+    c.vision,
+    c.mission
+  from public.candidates c
+  where c.election_id = v_election_id
+    and c.is_active = true
+  order by c.ballot_number asc;
+end;
+$$;
+
+create or replace function public.cast_vote(
+  p_session_hash text,
+  p_candidate_id uuid
+)
+returns table (status text)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_archived_at timestamptz;
+  v_candidate_exists boolean;
+  v_election_id uuid;
+  v_election_status public.election_status;
+  v_expires_at timestamptz;
+  v_finalized_at timestamptz;
+  v_has_voted boolean;
+  v_school_id uuid;
+  v_session_id uuid;
+  v_used_at timestamptz;
+  v_voter_id uuid;
+begin
+  select
+    s.id,
+    s.election_id,
+    s.voter_id,
+    s.expires_at,
+    s.used_at
+  into
+    v_session_id,
+    v_election_id,
+    v_voter_id,
+    v_expires_at,
+    v_used_at
+  from public.voter_sessions s
+  where s.session_hash = p_session_hash
+  for update;
+
+  if v_session_id is null then
+    return query select 'session_invalid'::text;
+    return;
+  end if;
+
+  if v_used_at is not null then
+    return query select 'already_voted'::text;
+    return;
+  end if;
+
+  if v_expires_at <= now() then
+    return query select 'session_expired'::text;
+    return;
+  end if;
+
+  select v.has_voted
+  into v_has_voted
+  from public.voters v
+  where v.id = v_voter_id
+    and v.election_id = v_election_id
+  for update;
+
+  if v_has_voted is null then
+    return query select 'session_invalid'::text;
+    return;
+  end if;
+
+  if v_has_voted then
+    update public.voter_sessions
+    set used_at = coalesce(used_at, now())
+    where id = v_session_id;
+
+    return query select 'already_voted'::text;
+    return;
+  end if;
+
+  select
+    e.status,
+    e.school_id,
+    e.archived_at,
+    e.finalized_at
+  into
+    v_election_status,
+    v_school_id,
+    v_archived_at,
+    v_finalized_at
+  from public.elections e
+  where e.id = v_election_id;
+
+  if v_election_status = 'paused' then
+    return query select 'paused'::text;
+    return;
+  end if;
+
+  if v_election_status = 'closed' then
+    return query select 'closed'::text;
+    return;
+  end if;
+
+  if v_election_status <> 'open'
+    or v_archived_at is not null
+    or v_finalized_at is not null then
+    return query select 'not_open'::text;
+    return;
+  end if;
+
+  select exists (
+    select 1
+    from public.candidates c
+    where c.id = p_candidate_id
+      and c.election_id = v_election_id
+      and c.is_active = true
+  )
+  into v_candidate_exists;
+
+  if not v_candidate_exists then
+    return query select 'candidate_invalid'::text;
+    return;
+  end if;
+
+  insert into public.votes (
+    election_id,
+    candidate_id,
+    ballot_fingerprint
+  )
+  values (
+    v_election_id,
+    p_candidate_id,
+    encode(gen_random_bytes(32), 'hex')
+  );
+
+  update public.voters
+  set
+    has_voted = true,
+    voted_at = now()
+  where id = v_voter_id
+    and election_id = v_election_id
+    and has_voted = false;
+
+  update public.voter_sessions
+  set used_at = now()
+  where id = v_session_id;
+
+  insert into public.audit_logs (
+    school_id,
+    action,
+    entity_type,
+    entity_id,
+    metadata
+  )
+  values (
+    v_school_id,
+    'vote.cast',
+    'election',
+    v_election_id,
+    '{"accepted": true}'::jsonb
+  );
+
+  return query select 'success'::text;
+end;
+$$;
+
+revoke all on function public.create_voter_session(text, text, timestamptz) from public;
+revoke all on function public.get_voting_context(text) from public;
+revoke all on function public.cast_vote(text, uuid) from public;
+
+grant execute on function public.create_voter_session(text, text, timestamptz) to anon, authenticated;
+grant execute on function public.get_voting_context(text) to anon, authenticated;
+grant execute on function public.cast_vote(text, uuid) to anon, authenticated;

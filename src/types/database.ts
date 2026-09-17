@@ -91,8 +91,8 @@ export type Database = {
           title: string;
           description: string | null;
           term_label: string | null;
-          starts_at: string;
-          ends_at: string;
+          starts_at: string | null;
+          ends_at: string | null;
           status: Database["public"]["Enums"]["election_status"];
           results_visibility: Database["public"]["Enums"]["results_visibility"];
           published_at: string | null;
@@ -112,8 +112,8 @@ export type Database = {
           title: string;
           description?: string | null;
           term_label?: string | null;
-          starts_at: string;
-          ends_at: string;
+          starts_at?: string | null;
+          ends_at?: string | null;
           status?: Database["public"]["Enums"]["election_status"];
           results_visibility?: Database["public"]["Enums"]["results_visibility"];
           published_at?: string | null;
@@ -133,8 +133,8 @@ export type Database = {
           title?: string;
           description?: string | null;
           term_label?: string | null;
-          starts_at?: string;
-          ends_at?: string;
+          starts_at?: string | null;
+          ends_at?: string | null;
           status?: Database["public"]["Enums"]["election_status"];
           results_visibility?: Database["public"]["Enums"]["results_visibility"];
           published_at?: string | null;
@@ -318,6 +318,15 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      delete_archived_test_election: {
+        Args: {
+          p_election_id: string;
+        };
+        Returns: {
+          candidate_photo_paths: string[];
+          status: string;
+        }[];
+      };
       cast_vote: {
         Args: {
           p_candidate_id: string;
@@ -395,6 +404,7 @@ export type Database = {
         | "election.created"
         | "election.updated"
         | "election.archived"
+        | "election.test_deleted"
         | "election.status_changed"
         | "candidate.created"
         | "candidate.updated"

@@ -4,11 +4,10 @@ import { useActionState } from "react";
 
 import { initialAdminFormState } from "../form-state";
 import { updateBallotBoxStatus } from "./actions";
-import type { BallotBoxTransition, EffectiveElectionStatus, ElectionStatus } from "./types";
+import type { BallotBoxTransition, ElectionStatus } from "./types";
 
 type BallotBoxControlsProps = {
   databaseStatus: ElectionStatus;
-  effectiveStatus: EffectiveElectionStatus;
   isReadyToOpen: boolean;
 };
 
@@ -38,7 +37,6 @@ function getButtonClass(variant: ControlConfig["variant"]): string {
 
 export function BallotBoxControls({
   databaseStatus,
-  effectiveStatus,
   isReadyToOpen,
 }: BallotBoxControlsProps) {
   const [state, formAction, isPending] = useActionState(
@@ -46,22 +44,12 @@ export function BallotBoxControls({
     initialAdminFormState,
   );
   const isTerminal = databaseStatus === "closed" || databaseStatus === "archived";
-  const isEffectivelyClosed = effectiveStatus === "closed";
   const controls: ControlConfig[] = [
     {
-      confirmMessage: "Jadwalkan pemilihan ini?",
-      disabled: databaseStatus !== "draft" || isTerminal,
-      label: "Jadwalkan Pemilihan",
-      pendingLabel: "Menjadwalkan...",
-      transition: "schedule",
-      variant: "secondary",
-    },
-    {
-      confirmMessage: "Buka kotak suara sekarang? Pemilih dengan token dapat masuk selama jadwal masih berlaku.",
+      confirmMessage: "Buka kotak suara sekarang? Pemilih dengan token akan dapat masuk dan memberikan suara.",
       disabled:
-        databaseStatus !== "scheduled" ||
+        !["draft", "scheduled", "paused"].includes(databaseStatus) ||
         !isReadyToOpen ||
-        isEffectivelyClosed ||
         isTerminal,
       label: "Buka Kotak Suara",
       pendingLabel: "Membuka...",
@@ -70,22 +58,11 @@ export function BallotBoxControls({
     },
     {
       confirmMessage: "Jeda pemilihan sementara? Pemilih tidak boleh memberikan suara sampai pemilihan dilanjutkan.",
-      disabled: databaseStatus !== "open" || effectiveStatus !== "open" || isTerminal,
-      label: "Jeda Pemilihan",
+      disabled: databaseStatus !== "open" || isTerminal,
+      label: "Jeda Kotak Suara",
       pendingLabel: "Menjeda...",
       transition: "pause",
       variant: "secondary",
-    },
-    {
-      confirmMessage: "Lanjutkan pemilihan yang sedang dijeda?",
-      disabled:
-        databaseStatus !== "paused" ||
-        effectiveStatus !== "paused" ||
-        isTerminal,
-      label: "Lanjutkan Pemilihan",
-      pendingLabel: "Melanjutkan...",
-      transition: "resume",
-      variant: "primary",
     },
     {
       confirmMessage: [
@@ -95,8 +72,8 @@ export function BallotBoxControls({
         "Kotak suara yang sudah ditutup tidak dapat dibuka kembali.",
       ].join("\n"),
       disabled:
-        databaseStatus !== "open" || isTerminal,
-      label: "Tutup Kotak Suara",
+        !["open", "paused"].includes(databaseStatus) || isTerminal,
+      label: "Tutup Permanen",
       pendingLabel: "Menutup...",
       transition: "close",
       variant: "danger",
