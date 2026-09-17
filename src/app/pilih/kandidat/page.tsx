@@ -32,7 +32,7 @@ export default async function VotingCandidatesPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:py-8">
-      <section className="mx-auto max-w-5xl space-y-6">
+      <section className="mx-auto w-full max-w-7xl space-y-6">
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-emerald-700">
             Pilih kandidat

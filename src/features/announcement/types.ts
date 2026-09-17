@@ -17,6 +17,7 @@ export type PublicAnnouncementState = {
 
 export type PublicCandidateResult = {
   ballotNumber: number;
+  candidateClassName: string | null;
   candidateId: string;
   candidateName: string;
   candidatePhotoUrl: string | null;

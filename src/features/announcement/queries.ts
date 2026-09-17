@@ -63,13 +63,35 @@ export async function getPublicAnnouncementState(
   return mapAnnouncementState(row);
 }
 
-function mapCandidate(row: FinalResultsRow): PublicCandidateResult | null {
+export async function getPublicAnnouncementStateStrict(
+  supabase: SupabaseClient<Database>,
+): Promise<PublicAnnouncementState> {
+  const { data, error } = await supabase.rpc("get_public_announcement_state");
+
+  if (error) {
+    throw new Error("Public announcement state RPC failed");
+  }
+
+  const row = data?.[0];
+
+  if (!row) {
+    throw new Error("Public announcement state is unavailable");
+  }
+
+  return mapAnnouncementState(row);
+}
+
+function mapCandidate(
+  row: FinalResultsRow,
+  candidateClasses: ReadonlyMap<string, string | null>,
+): PublicCandidateResult | null {
   if (!row.candidate_id || !row.candidate_name || row.ballot_number === null) {
     return null;
   }
 
   return {
     ballotNumber: row.ballot_number,
+    candidateClassName: candidateClasses.get(row.candidate_id) ?? null,
     candidateId: row.candidate_id,
     candidateName: row.candidate_name,
     candidatePhotoUrl: row.candidate_photo_url,
@@ -102,8 +124,17 @@ export async function getPublicFinalResults(
     return { status: "not_ready" };
   }
 
+  const { data: classRows } = await supabase.rpc(
+    "get_public_revealed_candidate_classes",
+  );
+  const candidateClasses = new Map(
+    (classRows ?? []).map((row) => [
+      row.candidate_id,
+      row.candidate_class_name,
+    ]),
+  );
   const candidates = rows.flatMap((row) => {
-    const candidate = mapCandidate(row);
+    const candidate = mapCandidate(row, candidateClasses);
     return candidate ? [candidate] : [];
   });
 

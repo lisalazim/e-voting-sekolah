@@ -100,7 +100,7 @@ export function CandidateForm({ candidate, mode }: CandidateFormProps) {
 
           <div className="space-y-2 sm:col-span-2">
             <label className="block text-sm font-medium text-slate-700" htmlFor="vision">
-              Visi
+              Visi <span className="font-normal text-slate-500">(opsional)</span>
             </label>
             <textarea
               className="min-h-24 block w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-950 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
@@ -113,7 +113,7 @@ export function CandidateForm({ candidate, mode }: CandidateFormProps) {
 
           <div className="space-y-2 sm:col-span-2">
             <label className="block text-sm font-medium text-slate-700" htmlFor="mission">
-              Misi
+              Misi <span className="font-normal text-slate-500">(opsional)</span>
             </label>
             <textarea
               className="min-h-28 block w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-950 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"

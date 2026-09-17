@@ -395,6 +395,13 @@ export type Database = {
           vote_count: number;
         }[];
       };
+      get_public_revealed_candidate_classes: {
+        Args: Record<string, never>;
+        Returns: {
+          candidate_class_name: string | null;
+          candidate_id: string;
+        }[];
+      };
     };
     Enums: {
       app_role: "admin" | "committee" | "observer";

@@ -182,3 +182,8 @@ export async function submitVote(
   await clearVoterSessionCookie();
   redirect("/pilih/selesai");
 }
+
+export async function prepareNextVoter(): Promise<void> {
+  await clearVoterSessionCookie();
+  redirect("/pilih");
+}
