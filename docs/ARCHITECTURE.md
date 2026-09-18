@@ -130,7 +130,7 @@ Berisi migration SQL untuk schema database Supabase. Migration awal mendefinisik
 - Environment contoh tersedia di `.env.example`.
 - Tipe database awal tersedia di `src/types/database.ts`.
 - Keputusan schema dan aturan akses awal dijelaskan di `docs/DATABASE_DESIGN.md`.
-- Service role key belum ditambahkan karena belum ada kebutuhan server-only setup pada fase ini.
+- Client dashboard tetap memakai publishable key dan session admin. Client privileged terpisah berada di `src/lib/supabase/admin.ts`, memakai Secret Key hanya pada Server Action login voter.
 
 ## Fondasi Admin Fase Ketiga
 
@@ -181,7 +181,19 @@ Berisi migration SQL untuk schema database Supabase. Migration awal mendefinisik
 - UI admin tidak menampilkan `token_hash`.
 - Hasil token asli batch dapat diunduh sebagai CSV `nama,kelas,token` satu kali dari state browser setelah aksi berhasil.
 - CSV memakai bentuk `123-456` agar mudah dibaca dan agar spreadsheet mempertahankan nol di depan.
-- RPC `create_voter_session` masih dapat dipanggil langsung dengan publishable client role. Durable rate limiting dan trust boundary sumber login adalah blocker wajib sebelum deployment produksi; pembatasan React, browser storage, atau memory proses tidak dianggap perlindungan.
+- Server Action login voter adalah satu-satunya boundary login token. RPC `create_voter_session` hanya dapat dieksekusi role `service_role` melalui Supabase Secret Key.
+- Durable rate limiting disimpan di PostgreSQL menggunakan HMAC bucket client/device, token-attempt, dan IP; tidak ada IP, token, cookie, atau session hash mentah pada tabel rate limit.
+- Cookie device dibuat server-side, HttpOnly, SameSite=Strict, dan tidak memuat identitas siswa.
+- Di Vercel, IP hanya dibaca dari `x-vercel-forwarded-for` ketika `VERCEL=1`. Development lokal memakai sentinel bersama dan tidak dianggap setara dengan boundary production.
+
+### Trust boundary dan pengelolaan secret
+
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` boleh masuk bundle browser dan hanya mendapat akses yang diberikan grant/RLS.
+- `SUPABASE_SECRET_KEY` berbentuk `sb_secret_...`, melewati RLS sebagai `service_role`, dan hanya boleh digunakan modul `server-only` untuk RPC login yang terbatas.
+- `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, dan `VOTER_RATE_LIMIT_PEPPER` diatur melalui environment lokal/Vercel tanpa menuliskan nilai aktual ke source control.
+- Jangan memasukkan secret ke nama `NEXT_PUBLIC_*`, log, cookie, respons, screenshot, atau dokumentasi repository.
+- Jika Secret Key bocor, buat/aktifkan key pengganti di Supabase, perbarui environment server, redeploy, verifikasi login, lalu cabut key lama. Jika pepper rate limit bocor, rotasi nilainya; bucket lama akan menjadi tidak terpakai dan dibersihkan maksimal 24 jam.
+- Sebelum commit, periksa diff dan client bundle untuk `sb_secret_`, `SUPABASE_SECRET_KEY`, serta nilai secret aktual.
 
 ## Kontrol Kotak Suara Fase Kedelapan
 

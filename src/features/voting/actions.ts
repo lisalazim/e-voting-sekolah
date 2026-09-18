@@ -4,12 +4,14 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { createSupabaseServerClient } from "../../lib/supabase/server";
+import { createSupabaseAdminClient } from "../../lib/supabase/admin";
 import {
   getVoterTokenFormat,
   normalizeVoterToken,
 } from "../../utils/voter-token";
 import { hashVoterToken } from "../admin/voters/token-utils";
 import { getVotingStatusMessage } from "./messages";
+import { getVoterLoginBuckets } from "./rate-limit";
 import {
   VOTER_SESSION_MAX_AGE_SECONDS,
   clearVoterSessionCookie,
@@ -70,6 +72,13 @@ function logCastVoteRpcError(error: SupabaseRpcError): void {
   });
 }
 
+function logVoterLoginRpcError(error: SupabaseRpcError): void {
+  console.error("[voting.create_voter_session] Supabase RPC error", {
+    code: sanitizeRpcErrorField(error.code),
+    message: sanitizeRpcErrorField(error.message),
+  });
+}
+
 function getLoginMessage(status: string): string {
   if (status === "already_voted") {
     return "Token sudah digunakan.";
@@ -77,6 +86,10 @@ function getLoginMessage(status: string): string {
 
   if (status === "invalid_token") {
     return "Token tidak ditemukan.";
+  }
+
+  if (status === "rate_limited") {
+    return "Terlalu banyak percobaan. Silakan tunggu beberapa menit.";
   }
 
   return getVotingStatusMessage(status);
@@ -100,9 +113,11 @@ export async function loginVoterWithToken(
   }
 
   let tokenHash: string;
+  let buckets: Awaited<ReturnType<typeof getVoterLoginBuckets>>;
 
   try {
     tokenHash = hashVoterToken(parsed.data.token);
+    buckets = await getVoterLoginBuckets(parsed.data.token);
   } catch {
     return {
       status: "error",
@@ -115,14 +130,19 @@ export async function loginVoterWithToken(
   const expiresAt = new Date(
     Date.now() + VOTER_SESSION_MAX_AGE_SECONDS * 1000,
   ).toISOString();
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase.rpc("create_voter_session", {
+    p_client_bucket_hash: buckets.clientBucketHash,
     p_expires_at: expiresAt,
+    p_ip_bucket_hash: buckets.ipBucketHash,
     p_session_hash: sessionHash,
+    p_token_bucket_hash: buckets.tokenBucketHash,
     p_token_hash: tokenHash,
   });
 
   if (error) {
+    logVoterLoginRpcError(error);
+
     return {
       status: "error",
       message: "Koneksi gagal. Coba lagi beberapa saat.",

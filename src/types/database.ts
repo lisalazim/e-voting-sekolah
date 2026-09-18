@@ -291,6 +291,36 @@ export type Database = {
         };
         Relationships: [];
       };
+      voter_login_rate_limits: {
+        Row: {
+          bucket_type: string;
+          bucket_hash: string;
+          window_started_at: string;
+          failure_count: number;
+          expires_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          bucket_type: string;
+          bucket_hash: string;
+          window_started_at: string;
+          failure_count?: number;
+          expires_at: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          bucket_type?: string;
+          bucket_hash?: string;
+          window_started_at?: string;
+          failure_count?: number;
+          expires_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       votes: {
         Row: {
           id: string;
@@ -338,13 +368,20 @@ export type Database = {
       };
       create_voter_session: {
         Args: {
+          p_client_bucket_hash: string;
           p_expires_at: string;
+          p_ip_bucket_hash: string;
           p_session_hash: string;
+          p_token_bucket_hash: string;
           p_token_hash: string;
         };
         Returns: {
           status: string;
         }[];
+      };
+      cleanup_voter_login_rate_limits: {
+        Args: Record<string, never>;
+        Returns: number;
       };
       get_voting_context: {
         Args: {

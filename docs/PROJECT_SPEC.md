@@ -134,7 +134,8 @@ Fondasi pengelolaan kandidat sebelum fitur pemilih dan voting:
 - Pemilih masuk melalui `/pilih` menggunakan token satu kali.
 - Token dinormalisasi dan di-hash dengan HMAC-SHA-256 memakai `VOTER_TOKEN_PEPPER`.
 - Token mentah tidak dikirim melalui URL, tidak disimpan di localStorage/sessionStorage, dan tidak dicatat di log.
-- Token enam digit ditujukan untuk kemudahan pengujian siswa dan belum production-ready. Durable rate limiting yang tidak dapat dilewati wajib tersedia sebelum deployment produksi.
+- Login token hanya melalui Server Action menggunakan Supabase Secret Key server-only. RPC login tidak dapat dipanggil dengan publishable key.
+- Rate limit PostgreSQL memakai jendela 10 menit: client dan token maksimal 5 kegagalan, IP maksimal 100 kegagalan untuk mengakomodasi Wi-Fi sekolah bersama.
 - Setelah token valid, aplikasi membuat sesi pemilih sementara selama 15 menit.
 - Cookie sesi bersifat HttpOnly, SameSite=Strict, Secure pada production, dan hanya menyimpan secret acak sesi.
 - Halaman `/pilih/kandidat` menampilkan kandidat aktif dari election sesi pemilih.

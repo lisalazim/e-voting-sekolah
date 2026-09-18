@@ -132,9 +132,11 @@ Catatan operasional:
 - File token tidak boleh diunggah ke tempat publik, dikirim ke grup terbuka, atau dicatat dalam audit log.
 - Data lama yang memiliki `external_id` tetap dapat digunakan, tetapi token dan UI admin tidak menampilkan NIS/NISN.
 
-### Blocker keamanan deployment token enam digit
+### Rate limiting login token enam digit
 
-Ruang kombinasi enam digit lebih kecil dan dipilih untuk kemudahan siswa dalam pengujian lokal. Sistem belum boleh dianggap production-ready sampai tersedia durable rate limiting dengan identifier sumber tepercaya yang tidak dapat dilewati. RPC `create_voter_session` yang masih dapat dipanggil langsung melalui role publik merupakan deployment blocker. Rate limiting berbasis React state, local/session storage, atau in-memory process dilarang.
+Ruang kombinasi enam digit dilindungi rate limit durable pada tabel `voter_login_rate_limits`. Tabel hanya menyimpan jenis bucket, HMAC bucket, awal jendela, jumlah kegagalan, dan expiry. Batas per jendela 10 menit adalah 5 kegagalan untuk device/client, 5 untuk token-attempt, dan 100 untuk IP bersama. Batas IP sengaja lebih longgar agar jaringan sekolah dengan satu IP publik tidak mudah terblokir. Data kedaluwarsa dibersihkan oleh RPC login dan fungsi cleanup, dengan retensi maksimal 24 jam.
+
+Tidak ada policy anon/authenticated pada tabel ini. RPC `create_voter_session` tidak dapat dijalankan dengan publishable key dan hanya diberikan kepada `service_role`. Pemeriksaan limit, lookup token, pencatatan kegagalan, dan pembuatan sesi berlangsung atomik dengan row lock bucket.
 
 Format impor pemilih:
 - File didukung: `.xlsx` dan `.csv`.
@@ -169,9 +171,11 @@ Aturan:
 ### RPC Voting
 
 RPC `create_voter_session`:
-- menerima `token_hash` yang dihitung server-side dari token mentah;
+- hanya dapat dipanggil Secret Key server melalui role `service_role`;
+- menerima `token_hash`, `session_hash`, expiry, dan tiga HMAC bucket yang dihitung Server Action;
+- mengunci bucket client, token-attempt, dan IP sebelum lookup pemilih;
 - memastikan token cocok dengan pemilih yang belum memilih;
-- memastikan election efektif `open` dan berada dalam jadwal;
+- memastikan election `open`, belum diarsipkan, dan belum difinalisasi;
 - membuat sesi pemilih dengan `session_hash` dan expiry.
 
 RPC `get_voting_context`:
