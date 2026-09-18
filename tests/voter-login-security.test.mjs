@@ -140,7 +140,7 @@ test("device cookie dan IP hanya dibuat pada boundary server tepercaya", () => {
 
 test("environment example memisahkan key publik dan secret server", () => {
   assert.match(envExample, /^SUPABASE_URL=/m);
-  assert.match(envExample, /^SUPABASE_SECRET_KEY=sb_secret_/m);
+  assert.match(envExample, /^SUPABASE_SECRET_KEY=$/m);
   assert.match(envExample, /^VOTER_RATE_LIMIT_PEPPER=/m);
   assert.doesNotMatch(envExample, /NEXT_PUBLIC_SUPABASE_SECRET_KEY/);
 });

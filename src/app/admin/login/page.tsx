@@ -5,6 +5,10 @@ import { AdminLoginForm } from "../../../features/admin/auth/admin-login-form";
 export const metadata: Metadata = {
   title: "Login Admin | E-Voting Sekolah",
   description: "Masuk ke area admin E-Voting Sekolah.",
+  robots: {
+    follow: false,
+    index: false,
+  },
 };
 
 export default function AdminLoginPage() {
