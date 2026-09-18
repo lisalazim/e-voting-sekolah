@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 
+import { formatSixDigitToken } from "../../../utils/voter-token";
 import {
   generateMissingVoterTokens,
   regenerateAllUnvotedVoterTokens,
@@ -25,7 +26,7 @@ function downloadTokenCsv(tokens: GeneratedVoterToken[]) {
     [
       token.nama,
       token.kelas,
-      token.token,
+      formatSixDigitToken(token.token),
     ]
       .map(escapeCsvValue)
       .join(","),
@@ -79,7 +80,9 @@ export function TokenBatchPanel({
             Pembuatan token akses
           </h3>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-            Token asli hanya ditampilkan sekali setelah dibuat. Unduh CSV
+            Token terdiri dari 6 digit angka. Siswa cukup mengetik angkanya;
+            tanda hubung akan dibuat otomatis. Token asli hanya ditampilkan
+            sekali setelah dibuat. Unduh CSV
             hasil pembuatan dan simpan di tempat yang aman untuk dicetak atau
             dibagikan oleh panitia.
           </p>
@@ -227,7 +230,7 @@ export function TokenBatchPanel({
                       {token.kelas}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 font-mono font-semibold">
-                      {token.token}
+                      {formatSixDigitToken(token.token)}
                     </td>
                   </tr>
                 ))}

@@ -174,11 +174,14 @@ Berisi migration SQL untuk schema database Supabase. Migration awal mendefinisik
 - Utility token berada di `src/features/admin/voters/token-utils.ts`.
 - Server Actions token berada di `src/features/admin/voters/token-actions.ts`.
 - State hasil token satu-kali berada di `src/features/admin/voters/token-state.ts` agar file `"use server"` hanya mengekspor fungsi async.
-- Token dibuat dengan generator acak kriptografis dan diformat agar mudah dibaca.
-- Token dinormalisasi sebelum hashing dengan menghapus spasi/tanda hubung dan mengubah huruf menjadi kapital.
+- Token baru dibuat sebagai string enam digit memakai `crypto.randomInt`; nilai seperti `000123` tidak dikonversi menjadi number.
+- Normalisasi bersama berada di `src/utils/voter-token.ts`. Spasi/tanda hubung dihapus sebelum validasi dan hashing.
+- Server menerima format enam digit baru serta format legacy sepuluh karakter selama masa transisi.
 - Database hanya menerima hasil HMAC-SHA-256 dari token menggunakan `VOTER_TOKEN_PEPPER`.
 - UI admin tidak menampilkan `token_hash`.
 - Hasil token asli batch dapat diunduh sebagai CSV `nama,kelas,token` satu kali dari state browser setelah aksi berhasil.
+- CSV memakai bentuk `123-456` agar mudah dibaca dan agar spreadsheet mempertahankan nol di depan.
+- RPC `create_voter_session` masih dapat dipanggil langsung dengan publishable client role. Durable rate limiting dan trust boundary sumber login adalah blocker wajib sebelum deployment produksi; pembatasan React, browser storage, atau memory proses tidak dianggap perlindungan.
 
 ## Kontrol Kotak Suara Fase Kedelapan
 

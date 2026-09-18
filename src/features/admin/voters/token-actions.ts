@@ -14,10 +14,9 @@ import {
   initialVoterTokenBatchState,
   initialVoterTokenSingleState,
 } from "./token-state";
-import { generateVoterToken, hashVoterToken } from "./token-utils";
+import { generateUniqueVoterToken } from "./token-generator";
+import { hashVoterToken } from "./token-utils";
 import type { AdminVoter } from "./types";
-
-const MAX_TOKEN_GENERATION_ATTEMPTS = 20;
 
 type TokenVoter = Pick<
   AdminVoter,
@@ -51,17 +50,7 @@ async function getTokenContext() {
 }
 
 function createUniqueToken(usedHashes: Set<string>): GeneratedVoterToken["token"] {
-  for (let attempt = 0; attempt < MAX_TOKEN_GENERATION_ATTEMPTS; attempt += 1) {
-    const token = generateVoterToken();
-    const tokenHash = hashVoterToken(token);
-
-    if (!usedHashes.has(tokenHash)) {
-      usedHashes.add(tokenHash);
-      return token;
-    }
-  }
-
-  throw new Error("Token unik belum bisa dibuat. Coba ulangi proses.");
+  return generateUniqueVoterToken(usedHashes, hashVoterToken);
 }
 
 async function getUsedTokenHashes(electionId: string): Promise<Set<string>> {

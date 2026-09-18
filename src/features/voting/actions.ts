@@ -4,6 +4,10 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { createSupabaseServerClient } from "../../lib/supabase/server";
+import {
+  getVoterTokenFormat,
+  normalizeVoterToken,
+} from "../../utils/voter-token";
 import { hashVoterToken } from "../admin/voters/token-utils";
 import { getVotingStatusMessage } from "./messages";
 import {
@@ -17,7 +21,14 @@ import {
 import type { VotingFormState } from "./state";
 
 const tokenSchema = z.object({
-  token: z.string().trim().min(1, "Masukkan token pemilih."),
+  token: z
+    .string()
+    .trim()
+    .min(1, "Masukkan 6 digit token.")
+    .transform(normalizeVoterToken)
+    .refine((token) => getVoterTokenFormat(token) !== null, {
+      message: "Token harus terdiri dari 6 angka.",
+    }),
 });
 
 const voteSchema = z.object({
@@ -61,7 +72,11 @@ function logCastVoteRpcError(error: SupabaseRpcError): void {
 
 function getLoginMessage(status: string): string {
   if (status === "already_voted") {
-    return "Token tidak valid atau tidak dapat digunakan.";
+    return "Token sudah digunakan.";
+  }
+
+  if (status === "invalid_token") {
+    return "Token tidak ditemukan.";
   }
 
   return getVotingStatusMessage(status);

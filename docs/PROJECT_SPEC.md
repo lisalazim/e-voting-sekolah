@@ -112,6 +112,9 @@ Fondasi pengelolaan kandidat sebelum fitur pemilih dan voting:
 - Token asli hanya ditampilkan satu kali setelah dibuat atau diregenerasi.
 - Database hanya menyimpan `token_hash`, bukan token asli.
 - Hash token memakai HMAC-SHA-256 dengan secret server-only `VOTER_TOKEN_PEPPER`.
+- Token baru dan hasil regenerasi menggunakan enam digit angka sebagai string; nol di depan dipertahankan.
+- Bentuk `123-456` hanya format tampilan. Nilai canonical yang di-hash adalah `123456`.
+- Token legacy sepuluh karakter tetap diterima selama masa transisi.
 - Token tidak boleh dibuat setelah kotak suara dibuka.
 - Belum membuat login pemilih, proses voting, hasil, atau mode pengumuman.
 
@@ -131,6 +134,7 @@ Fondasi pengelolaan kandidat sebelum fitur pemilih dan voting:
 - Pemilih masuk melalui `/pilih` menggunakan token satu kali.
 - Token dinormalisasi dan di-hash dengan HMAC-SHA-256 memakai `VOTER_TOKEN_PEPPER`.
 - Token mentah tidak dikirim melalui URL, tidak disimpan di localStorage/sessionStorage, dan tidak dicatat di log.
+- Token enam digit ditujukan untuk kemudahan pengujian siswa dan belum production-ready. Durable rate limiting yang tidak dapat dilewati wajib tersedia sebelum deployment produksi.
 - Setelah token valid, aplikasi membuat sesi pemilih sementara selama 15 menit.
 - Cookie sesi bersifat HttpOnly, SameSite=Strict, Secure pada production, dan hanya menyimpan secret acak sesi.
 - Halaman `/pilih/kandidat` menampilkan kandidat aktif dari election sesi pemilih.

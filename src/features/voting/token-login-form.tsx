@@ -1,11 +1,13 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
+import { formatVoterTokenInput, normalizeVoterToken } from "../../utils/voter-token";
 import { loginVoterWithToken } from "./actions";
 import { initialVotingFormState } from "./state";
 
 export function TokenLoginForm() {
+  const [token, setToken] = useState("");
   const [state, formAction, isPending] = useActionState(
     loginVoterWithToken,
     initialVotingFormState,
@@ -14,18 +16,26 @@ export function TokenLoginForm() {
   return (
     <form action={formAction} className="space-y-5">
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-slate-700" htmlFor="token">
+        <label className="block text-sm font-medium text-slate-700" htmlFor="token-input">
           Token pemilih
         </label>
+        <input name="token" type="hidden" value={normalizeVoterToken(token)} />
         <input
           autoComplete="one-time-code"
-          className="block w-full rounded-md border border-slate-300 bg-white px-3 py-3 text-base uppercase tracking-[0.18em] text-slate-950 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-          id="token"
-          inputMode="text"
-          name="token"
-          placeholder="ABCD-EFGH-JK"
+          autoFocus
+          className="block w-full rounded-md border border-slate-300 bg-white px-3 py-4 text-center text-2xl font-bold tracking-[0.16em] text-slate-950 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+          enterKeyHint="done"
+          id="token-input"
+          inputMode="numeric"
+          onChange={(event) => setToken(formatVoterTokenInput(event.target.value))}
+          placeholder="Masukkan 6 digit token"
           required
+          type="text"
+          value={token}
         />
+        <p className="text-center text-xs text-slate-500">
+          Ketik enam angka. Tanda hubung akan dibuat otomatis.
+        </p>
       </div>
 
       {state.message ? (

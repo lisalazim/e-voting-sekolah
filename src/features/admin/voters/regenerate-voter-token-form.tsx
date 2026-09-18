@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 
+import { formatSixDigitToken } from "../../../utils/voter-token";
 import { regenerateVoterToken } from "./token-actions";
 import { initialVoterTokenSingleState } from "./token-state";
 
@@ -59,7 +60,7 @@ export function RegenerateVoterTokenForm({
           <p>{state.message}</p>
           {state.token ? (
             <p className="mt-1 rounded-md border border-amber-200 bg-amber-50 p-2 font-mono text-sm font-semibold text-amber-950">
-              {state.nama} - {state.token}
+              {state.nama} - {formatSixDigitToken(state.token)}
             </p>
           ) : null}
         </div>

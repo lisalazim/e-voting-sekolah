@@ -122,14 +122,19 @@ Kolom penting:
 Catatan operasional:
 - Token mentah hanya boleh muncul saat dibuat atau dicetak.
 - Jika token hilang, panitia sebaiknya membuat ulang token dan membatalkan token lama.
-- Token dibuat dari 10 karakter acak kriptografis dengan alfabet huruf kapital dan angka yang mudah dibaca tanpa karakter ambigu seperti `O`, `0`, `I`, dan `1`.
+- Token baru dibuat sebagai tepat enam digit angka memakai generator acak kriptografis. Token diperlakukan sebagai string sehingga nol di depan tidak hilang.
 - Token disimpan hanya sebagai HMAC-SHA-256 pada `token_hash`.
 - Secret HMAC dibaca dari environment server-only `VOTER_TOKEN_PEPPER`; nilai ini harus secret acak yang kuat dan tidak boleh dikirim ke browser.
-- Input token harus dinormalisasi dengan menghapus spasi/tanda hubung dan mengubah huruf menjadi kapital sebelum hashing.
+- Input token dinormalisasi dengan menghapus spasi/tanda hubung. Format baru harus enam digit; pola legacy sepuluh karakter tetap diterima selama transisi.
 - Token asli hanya tersedia satu kali saat dibuat atau diregenerasi. Setelah halaman ditutup atau dimuat ulang, aplikasi tidak dapat menampilkan token asli kembali.
 - CSV token berisi `nama,kelas,token` dan harus disimpan, dicetak, serta dibagikan secara terbatas oleh panitia.
+- CSV menampilkan token sebagai `123-456`; tanda hubung bukan bagian dari nilai canonical atau hash.
 - File token tidak boleh diunggah ke tempat publik, dikirim ke grup terbuka, atau dicatat dalam audit log.
 - Data lama yang memiliki `external_id` tetap dapat digunakan, tetapi token dan UI admin tidak menampilkan NIS/NISN.
+
+### Blocker keamanan deployment token enam digit
+
+Ruang kombinasi enam digit lebih kecil dan dipilih untuk kemudahan siswa dalam pengujian lokal. Sistem belum boleh dianggap production-ready sampai tersedia durable rate limiting dengan identifier sumber tepercaya yang tidak dapat dilewati. RPC `create_voter_session` yang masih dapat dipanggil langsung melalui role publik merupakan deployment blocker. Rate limiting berbasis React state, local/session storage, atau in-memory process dilarang.
 
 Format impor pemilih:
 - File didukung: `.xlsx` dan `.csv`.

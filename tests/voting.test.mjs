@@ -15,19 +15,57 @@ const tokenUtils = readFileSync(
   "src/features/admin/voters/token-utils.ts",
   "utf8",
 );
+const tokenFormat = readFileSync("src/utils/voter-token.ts", "utf8");
+const tokenGenerator = readFileSync(
+  "src/features/admin/voters/token-generator.ts",
+  "utf8",
+);
+const tokenLoginForm = readFileSync(
+  "src/features/voting/token-login-form.tsx",
+  "utf8",
+);
+const tokenActions = readFileSync(
+  "src/features/admin/voters/token-actions.ts",
+  "utf8",
+);
 
-function normalizeToken(token) {
-  return token.replace(/[\s-]/g, "").toUpperCase();
-}
+test("normalisasi token baru dan legacy memakai canonical tanpa pemisah", () => {
+  assert.match(tokenFormat, /replace\(\/\[\\s-\]\/g, ""\)/);
+  assert.match(tokenFormat, /NEW_TOKEN_PATTERN = \/\^\\d\{6\}\$\//);
+  assert.match(tokenFormat, /LEGACY_TOKEN_PATTERN/);
+});
 
-test("normalisasi token menghapus spasi dan tanda hubung", () => {
-  assert.equal(normalizeToken(" abcd-efgh-jk "), "ABCDEFGHJK");
-  assert.match(tokenUtils, /replace\(\s*\/\[\\s-\]\//);
+test("generator memakai randomInt dan mempertahankan nol di depan", () => {
+  assert.match(tokenGenerator, /randomInt/);
+  assert.match(tokenGenerator, /padStart\(6, "0"\)/);
+  assert.match(tokenGenerator, /1_000_000/);
+  assert.doesNotMatch(tokenGenerator, /Math\.random/);
+});
+
+test("collision token digenerate ulang tanpa menimpa hash lama", () => {
+  assert.match(tokenGenerator, /usedHashes\.has\(tokenHash\)/);
+  assert.match(tokenGenerator, /usedHashes\.add\(tokenHash\)/);
+  assert.match(tokenGenerator, /attempt < MAX_TOKEN_GENERATION_ATTEMPTS/);
+  assert.match(tokenActions, /generateUniqueVoterToken\(usedHashes, hashVoterToken\)/);
+});
+
+test("input token memformat angka dan mengirim canonical string", () => {
+  assert.match(tokenLoginForm, /inputMode="numeric"/);
+  assert.match(tokenLoginForm, /autoComplete="one-time-code"/);
+  assert.match(tokenLoginForm, /enterKeyHint="done"/);
+  assert.match(tokenLoginForm, /type="hidden" value=\{normalizeVoterToken\(token\)\}/);
+  assert.match(tokenLoginForm, /formatVoterTokenInput/);
+  assert.match(tokenFormat, /digits\.length > 3/);
 });
 
 test("token invalid memakai pesan generik", () => {
-  assert.match(votingActions, /Token tidak valid atau tidak dapat digunakan/);
+  assert.match(votingActions, /Token tidak ditemukan/);
   assert.doesNotMatch(votingActions, /token_hash.*message/);
+});
+
+test("hash token tetap HMAC SHA-256 dan token mentah tidak diaudit", () => {
+  assert.match(tokenUtils, /createHmac\("sha256", pepper\)/);
+  assert.doesNotMatch(tokenActions, /metadata:\s*\{[^}]*token/s);
 });
 
 test("error cast_vote dicatat aman dan tidak dikirim ke browser", () => {
