@@ -36,7 +36,7 @@ export function VoteCandidateForm({ candidates }: VoteCandidateFormProps) {
 
           return (
             <article
-              className={`flex min-w-0 flex-col rounded-lg border p-4 shadow-sm transition ${
+              className={`flex min-w-0 flex-col rounded-lg border p-6 shadow-sm transition ${
                 isSelected
                   ? "border-emerald-600 bg-emerald-50 ring-2 ring-emerald-100"
                   : "border-slate-200 bg-white hover:border-emerald-300"
@@ -98,7 +98,7 @@ export function VoteCandidateForm({ candidates }: VoteCandidateFormProps) {
                 ) : null}
                 <button
                   aria-pressed={isSelected}
-                  className={`mt-auto min-h-11 w-full rounded-md px-4 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 ${
+                  className={`mt-4 min-h-11 w-full rounded-md px-4 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 ${
                     isSelected
                       ? "bg-emerald-700 text-white hover:bg-emerald-800"
                       : "border border-emerald-700 bg-white text-emerald-800 hover:bg-emerald-50"
