@@ -6,6 +6,15 @@ E-Voting Sekolah replaces paper ballots with a mobile-first voting flow that stu
 
 It was built by a school administrator who runs these elections, so the workflow follows how student elections actually happen: one committee, shared school Wi-Fi, a single announcement moment in front of the whole school.
 
+## Used in a real election
+
+| Metric | Result |
+| --- | --- |
+| Election | Student council (OSIS) election, September 2026 |
+| Turnout | **85%**: 204 of 240 registered students voted |
+| Voting window | 2 hours 8 minutes from first to last ballot |
+| Time to results | Announced publicly **32 minutes** after the last ballot |
+
 > The interface is in Bahasa Indonesia. School identity, election period, candidates and voters are all configured from the admin panel, so the same codebase can be reused by any school.
 
 ---
